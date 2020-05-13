@@ -1,0 +1,13 @@
+{
+  "name": "mongotsapp",
+  "scripts": {},
+  "engines": {
+    "node": "8"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2"
+  },
+  "private": true
+}

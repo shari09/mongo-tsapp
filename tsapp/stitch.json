@@ -1,0 +1,14 @@
+{
+    "app_id": "tsapp-idjxn",
+    "config_version": 20180301,
+    "name": "tsapp",
+    "location": "US-VA",
+    "deployment_model": "GLOBAL",
+    "security": {},
+    "custom_user_data_config": {
+        "enabled": false
+    },
+    "sync": {
+        "development_mode_enabled": false
+    }
+}

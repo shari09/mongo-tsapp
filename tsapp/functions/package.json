@@ -1,0 +1,16 @@
+{
+  "name": "run",
+  "scripts": {
+    "build": "zip node_modules.zip node_modules/*",
+    "deploy": "stitch-cli import --include-dependencies"
+  },
+  "engines": {
+    "node": "8"
+  },
+  "dependencies": {
+    "lodash": "^4.17.15",
+    "request": "^2.88.2",
+    "request-promise-native": "^1.0.8"
+  },
+  "private": true
+}

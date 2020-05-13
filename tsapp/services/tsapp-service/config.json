@@ -1,0 +1,11 @@
+{
+    "id": "5ebae2cabccb7b3c66a9c6f0",
+    "name": "tsapp-service",
+    "type": "mongodb-atlas",
+    "config": {
+        "clusterName": "Cluster0",
+        "readPreference": "primary",
+        "wireProtocolEnabled": true
+    },
+    "version": 1
+}
