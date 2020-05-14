@@ -1,9 +1,6 @@
 {
-  "name": "run",
-  "run_as_authed_user": false,
-  "run_as_user_id": "",
-  "run_as_user_id_script_source": "",
-  "disable_arg_logs": false,
-  "can_evaluate": {},
-  "options": {}
+    "id": "5ebb71378cd432f1252793e6",
+    "name": "run",
+    "private": false,
+    "can_evaluate": {}
 }
