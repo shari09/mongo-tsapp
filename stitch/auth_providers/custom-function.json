@@ -1,0 +1,9 @@
+{
+    "id": "5ebdbcacb753b4de043f57c3",
+    "name": "custom-function",
+    "type": "custom-function",
+    "config": {
+        "authFunctionName": "login"
+    },
+    "disabled": false
+}

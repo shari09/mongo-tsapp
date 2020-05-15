@@ -1,0 +1,10 @@
+{
+    "id": "5ebda9288cd432f125c69a34",
+    "name": "polling-ta",
+    "type": "SCHEDULED",
+    "config": {
+        "schedule": "*/10 * * * *"
+    },
+    "function_name": "run",
+    "disabled": false
+}

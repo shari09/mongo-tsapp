@@ -6,7 +6,11 @@
     "deployment_model": "GLOBAL",
     "security": {},
     "custom_user_data_config": {
-        "enabled": false
+        "enabled": false,
+        "mongo_service_id": "5ebae2cabccb7b3c66a9c6f0",
+        "database_name": "tsapp",
+        "collection_name": "users",
+        "user_id_field": "_id"
     },
     "sync": {
         "development_mode_enabled": false

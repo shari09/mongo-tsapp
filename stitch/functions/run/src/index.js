@@ -520,24 +520,30 @@ const updateCourseOverviews = async(userId, courseOverviews) => {
 
 
 
-const run = async() => {
-  
+const run = async (userId) => {
   const db = context.services.get('tsapp-service').db('tsapp');
-  
-  const users = await db.collection('users').find({
-    notificationEnabled: true,
-    loggedIn: true,
-  });
-  const asyncFunc = users.map(user => async() => {
+  if (!userId) {
+    const users = await db.collection('users').find({
+      // notificationEnabled: true,
+      // loggedIn: true
+    }).toArray();
+    const asyncFunc = users.map(user => async () => {
+      const [courseOverviews, courses] = await getFromTa(user.username, user.password);
+      await updateDB(courses, user._id);
+      await updateCourseOverviews(user._id, courseOverviews);
+    });
+    await asyncFunc.reduce(async (prevPromise, nextFunc) => {
+      await prevPromise;
+      await nextFunc();
+    }, Promise.resolve());
+  } else {
+    //update only one user
+    
+    const user = await db.collection('users').findOne({_id: userId});
     const [courseOverviews, courses] = await getFromTa(user.username, user.password);
     await updateDB(courses, user._id);
     await updateCourseOverviews(user._id, courseOverviews);
-  });
-
-  await asyncFunc.reduce(async(prevPromise, nextFunc) => {
-    await prevPromise;
-    await nextFunc();
-  }, Promise.resolve());
+  }
   
 };
 
