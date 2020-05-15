@@ -1,6 +1,0 @@
-{
-  "name": "run",
-  "scripts": {
-    "build": "babel --root-mode upward src -d lib"
-  }
-}
