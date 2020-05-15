@@ -6,10 +6,9 @@ import {Stitch, FunctionCredential} from 'mongodb-stitch-react-native-sdk';
 
 import InputBox from '../components/InputBox';
 import LoginButton from '../components/LoginButton';
-import {UserContext, ThemeContext, ThemeColour} from '../utils/contexts';
+import {ThemeContext, ThemeColour} from '../utils/contexts';
 import {createToast} from '../utils/toast'
-import { setDBLoggedIn } from '../utils/functions';
-import { ObjectId } from 'bson';
+
 
 interface Props {
   navigation: any;
@@ -20,11 +19,6 @@ const LoginHomePage: React.FC<Props> = ({navigation}) => {
   const [password, setPassword] = useState<string>('');
   const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
   const [isInvalid, setIsInvalid] = useState<boolean>(false);
-
-  const {setLoggedIn} = useContext(UserContext);
-  if (!setLoggedIn) {
-    throw new Error('setLoggedIn provider missing');
-  }
 
   const {mode, colour} = useContext(ThemeContext);
   const styles = getStyles(colour, mode);
@@ -42,18 +36,12 @@ const LoginHomePage: React.FC<Props> = ({navigation}) => {
       return;
     }
 
-    try {  
-      // const userId = await Stitch.defaultAppClient.callFunction('login', [{
-      //   username: studentId.trim(),
-      //   password: password
-      // }]);
+    try {
       const user = await Stitch.defaultAppClient.auth
         .loginWithCredential(new FunctionCredential({
           username: studentId.trim(),
           password: password
         }));
-      setLoggedIn(true);
-      setDBLoggedIn({userId: new ObjectId(user.identities[0].id), loggedIn: true});
     } catch (err) {
 
       console.log(err);

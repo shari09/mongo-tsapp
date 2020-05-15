@@ -3,8 +3,8 @@
     "name": "polling-ta",
     "type": "SCHEDULED",
     "config": {
-        "schedule": "*/10 * * * *"
+        "schedule": "*/15 * * * *"
     },
-    "function_name": "run",
+    "function_name": "updateForAllUsers",
     "disabled": false
 }

@@ -21,7 +21,6 @@ const getFromTa = async(username, password) => {
       // headers: {'Content-Type': ['application/x-www-form-url-encoded']}, 
       followRedirects: true,
     });
-    // console.log(JSON.stringify(res, null, 2));
 
     homePage = res.body.text();
   } catch (e) {
@@ -121,7 +120,7 @@ const getAssessments = (coursePage) => {
     t: 'c0fea4',
     c: 'afafff',
     a: 'ffd490',
-    f: 'cccccc'
+    f: '#dedede'
   };
   
   let assessments = [];
@@ -305,7 +304,8 @@ const updateCourseAvg = async(course, userId) => {
     return courseOverviewCollection.insertOne({
       userId: userId,
       average: avg,
-      date: now
+      date: now,
+      courseCode: course.courseCode
     });
   }
   return courseOverviewCollection.findOneAndUpdate({
@@ -411,7 +411,6 @@ const updateAssessments = async(course, courseId, userId) => {
     console.log(`new mark ${course.courseCode}`);
     modified = true;
     const res = await sendMarkNotif(userId, course.courseCode, assessment);
-    console.log(JSON.stringify(res));
     return assessmentCollection.insertOne({
       userId: userId,
       courseId: courseId,
@@ -484,7 +483,7 @@ const updateCourseOverviews = async(userId, courseOverviews) => {
     userId: userId
   }).toArray();
 
-  courseOverviewsDb.forEach(overview => {
+  const asyncFunc = courseOverviewsDb.map(overview => async() => {
     const match = courseOverviews.filter(ta => {
       return ta.courseCode === overview.courseCode;
     });
@@ -499,14 +498,20 @@ const updateCourseOverviews = async(userId, courseOverviews) => {
       }).catch(console.log);
     } else {
       //if the room number changed or something
-      courseOverviewCollection.findOneAndUpdate({
+      await courseOverviewCollection.findOneAndUpdate({
         _id: overview._id
-      }, {$set: {...courseOverviews[sameCourseIdx]}});
+      }, {$set: {...(courseOverviews[sameCourseIdx])}});
       courseOverviews.splice(sameCourseIdx, 1);
     }
   });
 
+  await asyncFunc.reduce(async(prev, next) => {
+    await prev;
+    await next();
+  }, Promise.resolve());
+
   if (courseOverviews.length > 0) {
+    courseOverviews.forEach(o => console.log(JSON.stringify(o)));
     return Promise.all(courseOverviews.map(async taCourseOverview => {
       return courseOverviewCollection.insertOne({
         date: now,
@@ -522,29 +527,10 @@ const updateCourseOverviews = async(userId, courseOverviews) => {
 
 const run = async (userId) => {
   const db = context.services.get('tsapp-service').db('tsapp');
-  if (!userId) {
-    const users = await db.collection('users').find({
-      // notificationEnabled: true,
-      // loggedIn: true
-    }).toArray();
-    const asyncFunc = users.map(user => async () => {
-      const [courseOverviews, courses] = await getFromTa(user.username, user.password);
-      await updateDB(courses, user._id);
-      await updateCourseOverviews(user._id, courseOverviews);
-    });
-    await asyncFunc.reduce(async (prevPromise, nextFunc) => {
-      await prevPromise;
-      await nextFunc();
-    }, Promise.resolve());
-  } else {
-    //update only one user
-    
-    const user = await db.collection('users').findOne({_id: userId});
-    const [courseOverviews, courses] = await getFromTa(user.username, user.password);
-    await updateDB(courses, user._id);
-    await updateCourseOverviews(user._id, courseOverviews);
-  }
-  
+  const user = await db.collection('users').findOne({_id: userId});
+  const [courseOverviews, courses] = await getFromTa(user.username, user.password);
+  await updateDB(courses, user._id);
+  await updateCourseOverviews(user._id, courseOverviews);
 };
 
 exports = run;

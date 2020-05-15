@@ -8,27 +8,21 @@ import {
 } from '@react-navigation/drawer';
 import {Icon, Text} from 'native-base';
 import {Stitch} from 'mongodb-stitch-react-native-sdk';
-import {UserContext, ThemeColour} from '../utils/contexts';
+import {ThemeColour} from '../utils/contexts';
 import {ThemeContext} from '../utils/contexts';
-import { setDBLoggedIn } from '../utils/functions';
-import SplashScreen from './SplashScreen';
 
 
 //this was one long component
 const SideBar: React.FC<DrawerContentComponentProps<DrawerContentOptions>> = (props) => {
 
   //signing out
-  const {setLoggedIn, userId} = useContext(UserContext);
-  if (!setLoggedIn || !userId) return <SplashScreen/>
 
   const {colour} = useContext(ThemeContext);
   const styles = getStyles(colour);
 
   const signOut = async() => {
     try {
-      await setDBLoggedIn({userId: userId, loggedIn: false});
       await Stitch.defaultAppClient.auth.logout();
-      setLoggedIn(false);
     } catch (err) {
       console.log(err);
     }

@@ -1,31 +1,30 @@
-const verifyUser = async(username, password) => {
+const verifyUser = async (username, password) => {
   try {
     console.log(`logging in as ${username}`);
     const res = await context.http.post({
       url: `https://ta.yrdsb.ca/yrdsb/index.php?username=${username}&password=${password}`,
-      followRedirects: true,
+      followRedirects: true
     });
-
     homePage = res.body.text();
   } catch (e) {
     console.log(e);
   }
-
-  if (/Invalid Login/.test(homePage)) {
+  if (homePage.includes('Invalid Login')) {
     return false;
   }
   return true;
 };
 
+const login = async loginPayload => {
+  const userCollection = context.services.get('tsapp-service').db('tsapp').collection('users');
+  const {
+    username,
+    password
+  } = loginPayload;
+  const user = await userCollection.findOne({
+    username: username
+  });
 
-
-const login = async(loginPayload) => {
-  const userCollection = context.services.get('tsapp-service')
-    .db('tsapp')
-    .collection('users');
-  const {username, password} = loginPayload;
-  const user = await userCollection.findOne({username: username});
-  
   if (user) {
     return user._id.toString();
   }
@@ -44,7 +43,6 @@ const login = async(loginPayload) => {
   }
 
   return null;
-  
 };
 
 exports = login;

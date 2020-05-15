@@ -1,5 +1,6 @@
 {
-  "name": "login",
-  "private": false,
-  "can_evaluate": {}
+    "id": "5ebdb99bbccb7b3c66748127",
+    "name": "login",
+    "private": false,
+    "run_as_system": true
 }

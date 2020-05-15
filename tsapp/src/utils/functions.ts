@@ -105,9 +105,5 @@ export const getUser = async(userId: ObjectId): Promise<any> => {
   const user: any = await db().collection('users').findOne({
     _id: userId
   });
-
-  console.log(user);
-
-  // console.log(user.displayName);
   return user; 
 };

@@ -1,7 +1,6 @@
 {
   "name": "run",
   "scripts": {
-    "babel": "babel $npm_config_function/src -d $npm_config_function/lib",
     "build": "zip -r node_modules.zip node_modules/",
     "deploy": "stitch-cli import --strategy=replace --include-dependencies"
   },
@@ -10,11 +9,6 @@
   },
   "dependencies": {
     "lodash": "^4.17.15"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.9.6",
-    "@babel/plugin-transform-regenerator": "^7.8.7",
-    "@babel/plugin-transform-typeof-symbol": "^7.8.4"
   },
   "private": true
 }

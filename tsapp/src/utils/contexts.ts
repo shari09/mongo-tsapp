@@ -4,7 +4,6 @@ import {colour, adobeAnalogousBlue, adobeAnalogousPastel, adobeMonochromaticBlue
 
 //userId context
 export interface IUserContext {
-  setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>|undefined;
   userId: ObjectId|undefined;
   name: string|undefined;
   setName: React.Dispatch<React.SetStateAction<string>>|undefined;
@@ -18,7 +17,6 @@ export interface IUserContext {
 };
 
 export const UserContext = React.createContext<IUserContext>({
-  setLoggedIn: undefined,
   userId: undefined,
   name: undefined,
   setName: undefined,

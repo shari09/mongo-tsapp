@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import notifee from '@notifee/react-native';
 import messaging, {FirebaseMessagingTypes} from '@react-native-firebase/messaging';
 
-import {Stitch, StitchAppClient} from 'mongodb-stitch-react-native-sdk';
+import {Stitch, StitchAppClient, StitchUser} from 'mongodb-stitch-react-native-sdk';
 
 import {Root} from 'native-base';
 import {NavigationContainer} from '@react-navigation/native';
@@ -35,45 +35,62 @@ const App = () => {
   const [stitchInitialized, setStitchInitialized] = useState<boolean>(false);
 
   useEffect(() => {
-    (async() => {
-      await Stitch.initializeDefaultAppClient('tsapp-idjxn');
+    Stitch.initializeDefaultAppClient('tsapp-idjxn').then(() => {
       setStitchInitialized(true);
-    })();
+    }).catch(console.log);
+  }, []);
+
+  const initUser = async() => {
+    if (!userId) return;
+    const updatedToken = await getToken();
+    if (!updatedToken) updateToken();
     
-  },[]);
-
-  const loadClient = async() => {
-    // console.log(await Stitch.hasAppClient('tsapp-idjxn'));
-    if (!stitchInitialized) return;
-    const client = Stitch.defaultAppClient;
-    // console.log(client);
-    if (client && client.auth.isLoggedIn) {
-      const userId = new ObjectId(client.auth.user?.identities[0].id);
-      setUserId(userId);
-      setLoggedIn(true);
-      const updatedToken = await getToken();
-      if (!updatedToken) updateToken();
-      if (!userId) throw new Error('missing uid');
-
-      setDBLoggedIn({userId: userId, loggedIn: true});
-      const user = await getUser(userId);
-      setAnimationEnabled(user.animationEnabled);
-      setPrecision(user.precision);
-      setName(user.displayName);
-    }
+    setDBLoggedIn({userId: userId, loggedIn: true});
+    const user = await getUser(userId);
+    setAnimationEnabled(user.animationEnabled);
+    setPrecision(user.precision);
+    setName(user.displayName);
+    setLoggedIn(true);
     setInitializing(false);
   };
 
+  const loadUserId = (stitchUser: StitchUser) => {
+    const userId = new ObjectId(stitchUser.identities[0].id);
+    setUserId(userId);
+  }
+
   //checks if the user is signed in
   useEffect(() => {
-    loadClient();
+    if (!stitchInitialized) return;
+    const auth = Stitch.defaultAppClient.auth;
+    //add a auth state listener
+    auth.addAuthListener({
+      onUserLoggedIn: (auth, loggedInUser) => {
+        loadUserId(loggedInUser);
+      },
+      onUserLoggedOut: (auth, loggedOutUser) => {
+        const userId = new ObjectId(loggedOutUser.identities[0].id);
+        if (!userId) throw new Error('userid not found when logging out');
+        setLoggedIn(false);
+        setDBLoggedIn({userId: userId, loggedIn: false});
+      }
+    });
+    setInitializing(false);
+    //if the user is already logged in
+    if (auth.isLoggedIn && auth.user) {
+      setInitializing(true);
+      loadUserId(auth.user);
+    }
   }, [stitchInitialized]);
+
+  useEffect(() => {
+    initUser();
+  }, [userId]);
 
 
   //update fcm token to the cloud
   const updateToken = async () => {
     try {
-      console.log(userId);
       if (userId) {
         const fcmToken = await AsyncStorage.getItem('fcmToken');
         console.log('updated token to mongo');
@@ -152,7 +169,6 @@ const App = () => {
   }
 
   const userContext: IUserContext = {
-    setLoggedIn: setLoggedIn,
     userId: userId,
     name: name,
     setName: setName,
