@@ -32,5 +32,4 @@ export const adobeMonochromaticBlue = {
   GRAY_BLUE: '#6050CC',
 };
 
-
 export default colour;

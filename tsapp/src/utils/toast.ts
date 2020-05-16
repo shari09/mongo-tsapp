@@ -1,11 +1,10 @@
 import {Toast} from 'native-base';
 import {StyleSheet} from 'react-native';
 
-
 export interface Props {
-  type: "danger" | "success" | "warning" | undefined;
+  type: 'danger' | 'success' | 'warning' | undefined;
   text: string;
-};
+}
 
 export const createToast = (props: Props): void => {
   Toast.show({
@@ -29,7 +28,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     alignSelf: 'center',
     flex: 1,
-  }
+  },
 });
 
 export default createToast;

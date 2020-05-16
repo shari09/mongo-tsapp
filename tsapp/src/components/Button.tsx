@@ -1,34 +1,32 @@
-import React, {useState, useContext} from 'react';
-import {View, Text} from 'native-base';
-import { StyleSheet, TouchableOpacity } from 'react-native';
-import {ThemeContext, ThemeColour} from '../utils/contexts';
+import {Text, View} from 'native-base';
+import React, {useContext} from 'react';
+import {StyleProp, StyleSheet, TouchableOpacity, ViewStyle} from 'react-native';
+import {Theme, ThemeColour, ThemeContext} from '../utils/contexts';
 
 interface Props {
   buttonOnPress: () => void;
   buttonText: string;
   buttonProps?: {};
-  style?: {}
-};
+  style?: StyleProp<ViewStyle>;
+}
 
-const LoginButton: React.FC<Props> = ({
+const Button: React.FC<Props> = ({
   buttonOnPress,
   buttonText,
   buttonProps,
-  style
+  style,
 }) => {
-  const {colour} = useContext(ThemeContext);
+  const {colour} = useContext<Theme>(ThemeContext);
   const styles = getStyles(colour);
-  
 
   return (
     <View>
-      <TouchableOpacity 
-        onPress={buttonOnPress} 
+      <TouchableOpacity
+        onPress={buttonOnPress}
         {...buttonProps}
         style={[styles.container, style]}
-        activeOpacity={0.8}
-      >
-        <View >
+        activeOpacity={0.8}>
+        <View>
           <Text style={styles.buttonText}>{buttonText.toUpperCase()}</Text>
         </View>
       </TouchableOpacity>
@@ -51,10 +49,10 @@ const getStyles = (colour: ThemeColour) => {
       fontSize: 20,
       width: '100%',
       fontFamily: 'sans-serif-medium',
-      color: colour.button.text
+      color: colour.button.text,
     },
   });
   return styles;
 };
 
-export default LoginButton;
+export default Button;

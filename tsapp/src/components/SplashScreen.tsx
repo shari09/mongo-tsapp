@@ -1,13 +1,13 @@
-import React, {useContext} from 'react';
 import {Container, Content, Spinner} from 'native-base';
-import {ThemeContext} from '../utils/contexts';
+import React, {useContext} from 'react';
+import {Theme, ThemeContext} from '../utils/contexts';
 
 const SplashScreen = () => {
-  const {colour} = useContext(ThemeContext);
+  const {colour} = useContext<Theme>(ThemeContext);
   return (
     <Container>
       <Content style={{backgroundColor: colour.background}}>
-        <Spinner color='blue'/>
+        <Spinner color="blue" />
       </Content>
     </Container>
   );

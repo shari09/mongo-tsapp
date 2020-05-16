@@ -3,7 +3,7 @@ const verifyUser = async (username, password) => {
     console.log(`logging in as ${username}`);
     const res = await context.http.post({
       url: `https://ta.yrdsb.ca/yrdsb/index.php?username=${username}&password=${password}`,
-      followRedirects: true
+      followRedirects: true,
     });
     homePage = res.body.text();
   } catch (e) {
@@ -15,14 +15,14 @@ const verifyUser = async (username, password) => {
   return true;
 };
 
-const login = async loginPayload => {
-  const userCollection = context.services.get('tsapp-service').db('tsapp').collection('users');
-  const {
-    username,
-    password
-  } = loginPayload;
+const login = async (loginPayload) => {
+  const userCollection = context.services
+    .get('tsapp-service')
+    .db('tsapp')
+    .collection('users');
+  const { username, password } = loginPayload;
   const user = await userCollection.findOne({
-    username: username
+    username: username,
   });
 
   if (user) {
@@ -37,7 +37,7 @@ const login = async loginPayload => {
       notificationEnabled: true,
       precision: 2,
       displayName: username,
-      animationEnabled: true
+      animationEnabled: true,
     });
     return res.insertedId.toString();
   }

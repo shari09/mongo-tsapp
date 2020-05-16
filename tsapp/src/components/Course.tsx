@@ -1,8 +1,8 @@
+import {Icon, Text} from 'native-base';
 import React, {useContext} from 'react';
-import {Text, Button, Icon} from 'native-base';
-import { StyleSheet, View } from 'react-native';
-import {ThemeContext, ThemeColour} from '../utils/contexts';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import {StyleSheet, View} from 'react-native';
+import {TouchableOpacity} from 'react-native-gesture-handler';
+import {Theme, ThemeColour, ThemeContext} from '../utils/contexts';
 
 interface Props {
   name: string;
@@ -10,7 +10,7 @@ interface Props {
   room: string;
   average: string;
   navigate: (courseCode: string) => void;
-};
+}
 
 const Course: React.FC<Props> = ({
   name,
@@ -19,16 +19,14 @@ const Course: React.FC<Props> = ({
   average,
   navigate,
 }) => {
-  const {colour} = useContext(ThemeContext);
+  const {colour} = useContext<Theme>(ThemeContext);
   const styles = getStyles(colour);
-  
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       onPress={() => navigate(courseCode)}
       disabled={average === 'NaN'}
-      activeOpacity={0.5}
-    >
+      activeOpacity={0.5}>
       <View style={[styles.wrapper, {opacity: average === 'NaN' ? 0.3 : 1}]}>
         <View style={styles.description}>
           <Text style={styles.courseCode}>{courseCode}</Text>
@@ -39,7 +37,7 @@ const Course: React.FC<Props> = ({
           <Text style={styles.percent}>
             {average === 'NaN' ? 'N/A' : `${average}%`}
           </Text>
-          <Icon name='ios-arrow-forward' style={styles.arrow}/>
+          <Icon name="ios-arrow-forward" style={styles.arrow} />
         </View>
       </View>
     </TouchableOpacity>
@@ -58,11 +56,11 @@ const getStyles = (colour: ThemeColour) => {
       flexDirection: 'row',
       borderColor: colour.courseCard.border,
       backgroundColor: colour.courseCard.background,
-      padding: 20
+      padding: 20,
     },
     description: {
       flex: 1.6,
-      alignSelf: 'center'
+      alignSelf: 'center',
     },
     courseCode: {
       fontFamily: 'sans-serif',
@@ -78,7 +76,7 @@ const getStyles = (colour: ThemeColour) => {
     room: {
       fontFamily: 'sans-serif',
       color: colour.courseCard.otherInfo,
-      fontSize: 12
+      fontSize: 12,
     },
     average: {
       flex: 1,
@@ -99,8 +97,8 @@ const getStyles = (colour: ThemeColour) => {
       marginLeft: 8,
       fontSize: 20,
       alignSelf: 'center',
-      color: colour.courseCard.border
-    }
+      color: colour.courseCard.border,
+    },
   });
   return styles;
 };

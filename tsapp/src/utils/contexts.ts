@@ -1,20 +1,27 @@
-import React from 'react';
 import {ObjectId} from 'bson';
-import {colour, adobeAnalogousBlue, adobeAnalogousPastel, adobeMonochromaticBlue} from './colours';
+import React from 'react';
+import {
+  adobeAnalogousBlue,
+  adobeAnalogousPastel,
+  adobeMonochromaticBlue,
+  colour,
+} from './colours';
 
 //userId context
 export interface IUserContext {
-  userId: ObjectId|undefined;
-  name: string|undefined;
-  setName: React.Dispatch<React.SetStateAction<string>>|undefined;
+  userId: ObjectId | undefined;
+  name: string | undefined;
+  setName: React.Dispatch<React.SetStateAction<string>> | undefined;
   isLoggedIn: boolean;
   animationEnabled: boolean;
-  setAnimationEnabled: React.Dispatch<React.SetStateAction<boolean>>|undefined;
+  setAnimationEnabled:
+    | React.Dispatch<React.SetStateAction<boolean>>
+    | undefined;
   darkMode: boolean;
-  setDarkMode: React.Dispatch<React.SetStateAction<boolean>>|undefined;
+  setDarkMode: React.Dispatch<React.SetStateAction<boolean>> | undefined;
   precision: number;
-  setPrecision: React.Dispatch<React.SetStateAction<number>>|undefined;
-};
+  setPrecision: React.Dispatch<React.SetStateAction<number>> | undefined;
+}
 
 export const UserContext = React.createContext<IUserContext>({
   userId: undefined,
@@ -29,7 +36,6 @@ export const UserContext = React.createContext<IUserContext>({
   setPrecision: undefined,
 });
 
-
 export interface ThemeColour {
   statusBarBackground: string;
   background: string;
@@ -38,21 +44,21 @@ export interface ThemeColour {
     dropShadow: string;
     icon: string;
     text: string;
-  },
-  sidebar: {  
+  };
+  sidebar: {
     icon: string;
     activeText: string;
     inactiveText: string;
     activeBackground: string;
     inactiveBackground: string;
-  },
+  };
   courseCard: {
     courseCode: string;
     otherInfo: string;
     percent: string;
     border: string;
     background: string;
-  },
+  };
   assessmentCard: {
     text: string;
     border: string;
@@ -61,29 +67,29 @@ export interface ThemeColour {
       outline: string;
       percent: string;
       text: string;
-    },
+    };
     background: string;
-  },
+  };
   button: {
     text: string;
     background: string;
-  },
+  };
   settings: {
     icon: string;
     text: string;
     thumb: {
       on: string;
       off: string;
-    },
+    };
     track: {
       on: string;
       off: string;
-    }
-  },
+    };
+  };
   refresh: string;
-};
+}
 
-export const lightTheme: ThemeColour  = {
+export const lightTheme: ThemeColour = {
   statusBarBackground: colour.LIGHT_GRAY,
   background: colour.LIGHT_LIGHT_GRAY,
   header: {
@@ -125,7 +131,7 @@ export const lightTheme: ThemeColour  = {
     icon: colour.DARK_GRAY,
     thumb: {
       on: colour.BLUE,
-      off: 'white'
+      off: 'white',
     },
     track: {
       on: '#d9e4ff',
@@ -191,8 +197,8 @@ export const darkTheme: ThemeColour = {
 
 export interface Theme {
   colour: ThemeColour;
-  mode: 'dark'|'light';
-};
+  mode: 'dark' | 'light';
+}
 
 export const ThemeContext = React.createContext<Theme>({
   mode: 'dark',

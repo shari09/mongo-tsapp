@@ -1,35 +1,37 @@
-import React, {useState, useRef, useContext} from 'react';
 import {Text} from 'native-base';
-import { StyleSheet, View, TouchableOpacity, Animated} from 'react-native';
-
-
-import StrandComponent from './StrandComponent';
+import React, {useContext, useRef, useState} from 'react';
+import {Animated, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {
+  IUserContext,
+  Theme,
+  ThemeColour,
+  ThemeContext,
+  UserContext,
+} from '../utils/contexts';
 import {Marks, Strand} from '../utils/functions';
-import {UserContext, ThemeContext, ThemeColour} from '../utils/contexts';
+import StrandComponent from './StrandComponent';
 
 interface Props {
   name: string;
   marks: Marks;
-  average: string|null;
+  average: string | null;
   feedback: string;
-};
+}
 
-
-const Assessment: React.FC<Props> = ({
-  name,
-  marks,
-  average,
-  feedback
-}) => {
-  const {animationEnabled} = useContext(UserContext);
-  const {colour} = useContext(ThemeContext);
+const Assessment: React.FC<Props> = ({name, marks, average, feedback}) => {
+  const {animationEnabled} = useContext<IUserContext>(UserContext);
+  const {colour} = useContext<Theme>(ThemeContext);
   const {styles, flippedStyles} = getStyles(colour);
 
   const [flipped, setFlipped] = useState<boolean>(false);
   const [displayFeedback, setDisplayFeedback] = useState<boolean>(false);
   const flipAnim = useRef(new Animated.Value(0)).current;
 
-  const flipCard = () => {
+  /**
+   *Sets the animation for flipping the card,
+   *immediately flips if it the user disabled animation.
+   */
+  const flipCard = (): void => {
     setDisplayFeedback(false);
     if (!animationEnabled) {
       setFlipped(!flipped);
@@ -39,70 +41,85 @@ const Assessment: React.FC<Props> = ({
     Animated.timing(flipAnim, {
       toValue: flipped ? 0 : 1,
       duration: 400,
-      useNativeDriver: true
+      useNativeDriver: true,
     }).start();
     setTimeout(() => setFlipped(!flipped), 100);
   };
 
+  //flipping styles
   const flip = StyleSheet.create({
     front: {
       transform: [
-        {rotateX: flipAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: ['0deg', '180deg']
-        }) as unknown as string},
+        {
+          rotateX: (flipAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '180deg'],
+          }) as unknown) as string,
+        },
       ],
     },
     back: {
       transform: [
-        {rotateX: flipAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: ['180deg', '360deg']
-        }) as unknown as string},
+        {
+          rotateX: (flipAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['180deg', '360deg'],
+          }) as unknown) as string,
+        },
       ],
-    }
+    },
   });
 
   const opacity = flipAnim.interpolate({
     inputRange: [0, 0.5, 1],
-    outputRange: [1, 0, 1]
+    outputRange: [1, 0, 1],
   });
 
-  const getStrands = () => {
+  /**
+   * Gets the strand component.
+   * @returns an array of strand components for each strand.
+   */
+  const getStrands = (): JSX.Element[] => {
     return Object.keys(marks).map((strand: string) => {
       const typedStrand = strand as Strand;
-      return (
-        <StrandComponent 
-          mark={marks[typedStrand]}
-          strand={typedStrand}/>
-      );
+      return <StrandComponent mark={marks[typedStrand]} strand={typedStrand} />;
     });
   };
 
-  const getAvgDisplay = () => {
+  /**
+   * Gets the average of the assessment.
+   * @returns assessment average,
+   *          'N/A' if there are no marks in the assessments,
+   *          'NaN' if the assessment is unweighted (weight=0 or no weight)
+   */
+  const getAvgDisplay = (): string => {
     if (average === 'NaN') return 'Unweighted';
     else if (!average) return 'N/A';
     return `${average}%`;
-  }; 
+  };
 
+  /**
+   * Gets the text props for opacity and fontSize depending on the average.
+   * Lower opacity - if the assessment is unweighted or no marks are present.
+   * @returns assessment text props.
+   */
   const getTextAttributes = () => {
     if (!average || average === 'NaN') {
       return {
         opacity: 0.3,
-        fontSize: 15
-      }
-    };
+        fontSize: 15,
+      };
+    }
     return {opacity: 1};
   };
 
   return (
-      <Animated.View style={{opacity: opacity, marginTop: 5}}>
-        {!flipped ?
-        <TouchableOpacity 
+    <Animated.View style={{opacity: opacity, marginTop: 5}}>
+      {!flipped ? (
+        <TouchableOpacity
           activeOpacity={0.5}
           style={[styles.wrapper, animationEnabled ? flip.front : undefined]}
-          onPress={flipCard}
-        >
+          onPress={flipCard}>
           <View style={styles.nameWrapper}>
             <Text style={[styles.name, getTextAttributes()]}>{name}</Text>
           </View>
@@ -112,34 +129,36 @@ const Assessment: React.FC<Props> = ({
             </Text>
           </View>
         </TouchableOpacity>
-        :
+      ) : (
         <TouchableOpacity
           activeOpacity={0.5}
-          style={[flippedStyles.wrapper, animationEnabled ? flip.back : undefined]}
-          onPress={flipCard}
-        >
+          style={[
+            flippedStyles.wrapper,
+            animationEnabled ? flip.back : undefined,
+          ]}
+          onPress={flipCard}>
           <View style={flippedStyles.nameWrapper}>
             <Text style={flippedStyles.name}>{name}</Text>
-            {
-            feedback && feedback !== ""
-            ? <TouchableOpacity
+            {feedback && feedback !== '' ? (
+              <TouchableOpacity
                 style={flippedStyles.feedbackButton}
-                onPress={() => setDisplayFeedback(!displayFeedback)}  
-              ><Text style={[flippedStyles.feedback, {fontSize: 10}]}>Feedback</Text></TouchableOpacity>  
-            : null
-            }
+                onPress={() => setDisplayFeedback(!displayFeedback)}>
+                <Text style={[flippedStyles.feedback, {fontSize: 10}]}>
+                  Feedback
+                </Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
           <View style={flippedStyles.strands}>
-            {displayFeedback ?
+            {displayFeedback ? (
               <Text style={flippedStyles.feedback}>{feedback}</Text>
-            : getStrands()
-            }
+            ) : (
+              getStrands()
+            )}
           </View>
         </TouchableOpacity>
-        }
-      </Animated.View>
-    
-    
+      )}
+    </Animated.View>
   );
 };
 
@@ -154,21 +173,21 @@ const getStyles = (colour: ThemeColour) => {
       alignContent: 'center',
       justifyContent: 'center',
       padding: 20,
-      backgroundColor: colour.assessmentCard.background
+      backgroundColor: colour.assessmentCard.background,
     },
     nameWrapper: {
       flex: 1.3,
-      alignSelf: 'center'
+      alignSelf: 'center',
     },
     name: {
       fontFamily: 'sans-serif',
       fontSize: 15,
-      color: colour.assessmentCard.text
+      color: colour.assessmentCard.text,
     },
     avgWrapper: {
       flex: 1,
       marginLeft: 'auto',
-      alignSelf: 'center'
+      alignSelf: 'center',
     },
     avg: {
       marginLeft: 'auto',
@@ -176,10 +195,10 @@ const getStyles = (colour: ThemeColour) => {
       fontFamily: 'sans-serif',
       fontSize: 20,
       fontWeight: 'bold',
-      color: colour.assessmentCard.text
-    }
+      color: colour.assessmentCard.text,
+    },
   });
-  
+
   const flippedStyles = StyleSheet.create({
     wrapper: {
       height: 320,
@@ -190,7 +209,7 @@ const getStyles = (colour: ThemeColour) => {
       alignContent: 'center',
       justifyContent: 'center',
       padding: 20,
-      backgroundColor: colour.assessmentCard.background
+      backgroundColor: colour.assessmentCard.background,
     },
     nameWrapper: {
       flex: 0.4,
@@ -203,7 +222,7 @@ const getStyles = (colour: ThemeColour) => {
       alignSelf: 'center',
       textAlign: 'center',
       flex: 5,
-      margin: 10
+      margin: 10,
     },
     feedbackButton: {
       borderColor: colour.assessmentCard.text,
@@ -211,7 +230,7 @@ const getStyles = (colour: ThemeColour) => {
       flex: 1,
       alignSelf: 'center',
       height: 30,
-      justifyContent: 'center'
+      justifyContent: 'center',
     },
     feedback: {
       fontFamily: 'sans-serif',
@@ -219,21 +238,20 @@ const getStyles = (colour: ThemeColour) => {
       color: colour.assessmentCard.text,
       alignSelf: 'center',
       textAlign: 'center',
-      marginLeft: 0
+      marginLeft: 0,
     },
     strands: {
       flex: 2,
       flexDirection: 'row',
       justifyContent: 'flex-end',
       alignSelf: 'center',
-    }
+    },
   });
 
   return {
-    styles: styles, 
-    flippedStyles: flippedStyles
+    styles: styles,
+    flippedStyles: flippedStyles,
   };
 };
-
 
 export default Assessment;

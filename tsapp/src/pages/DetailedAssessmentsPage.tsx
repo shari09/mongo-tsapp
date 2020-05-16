@@ -1,28 +1,33 @@
-import React, {useState, useContext, useEffect} from 'react';
+import {Container, Content, View} from 'native-base';
+import React, {useContext, useEffect, useState} from 'react';
 import {RefreshControl, StyleSheet} from 'react-native';
-import { Container, Content, View, Text } from 'native-base';
-
-import GoBackNav from '../components/GoBackNav';
-import {UserContext, ThemeContext, ThemeColour} from '../utils/contexts';
-import {getDate, Marks, db, Strand, Mark} from '../utils/functions';
 import AssessmentComponent from '../components/Assessment';
-import StrandComponent from '../components/StrandComponent';
+import GoBackNav from '../components/GoBackNav';
 import SplashScreen from '../components/SplashScreen';
+import StrandComponent from '../components/StrandComponent';
+import {
+  IUserContext,
+  Theme,
+  ThemeColour,
+  ThemeContext,
+  UserContext,
+} from '../utils/contexts';
+import {db, getDate, Mark, Marks, Strand} from '../utils/functions';
 
 interface Props {
   navigation: any;
   route: any;
-};
+}
 
 interface Assessment {
   name: string;
   marks: Marks;
-  average: string|null;
+  average: string | null;
   feedback: string;
-};
+}
 
-type CourseAvg = {
-  [strand in Strand]: Mark|null;
+type StrandsAvg = {
+  [strand in Strand]: Mark | null;
 };
 
 type TotalMarks = {
@@ -33,163 +38,198 @@ type TotalMarks = {
 };
 
 type Weights = {
-  [strand in Strand]: number|null;
+  [strand in Strand]: number | null;
 };
 
-const now = getDate();
-
+const now: string = getDate();
 
 const DetailedAssessmentsPage: React.FC<Props> = ({navigation, route}) => {
   if (!route.params?.courseCode) {
     throw new Error('course info not passed for assessments page');
   }
   const courseCode: string = route.params.courseCode;
-  const {userId, precision} = useContext(UserContext);
+  const {userId, precision} = useContext<IUserContext>(UserContext);
   if (!userId) throw new Error('no uid for retrieving assessments');
 
-  const {colour} = useContext(ThemeContext);
+  const {colour} = useContext<Theme>(ThemeContext);
   const styles = getStyles(colour);
 
-  const [assessments, setAssessments] = useState<Assessment[]|null>(null);
-  const [courseAvg, setCourseAvg] = useState<CourseAvg|null>(null);
-  const [weights, setCourseWeights] = useState<Weights|null>(null);
+  const [assessments, setAssessments] = useState<Assessment[] | null>(null);
+  const [strandsAvg, setStrandsAvg] = useState<StrandsAvg | null>(null);
+  const [weights, setCourseWeights] = useState<Weights | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-
-  const getAssessmentAvg = async(marks: Marks): Promise<string|null> => {
-
+  /**
+   * Find the assessment average.
+   * @param marks the marks for the assessment.
+   * @returns assessment average,
+   *          'isNaN' if the weights are zero,
+   *          and null if there is no marks present.
+   */
+  const getAssessmentAvg = async (marks: Marks): Promise<string | null> => {
     let sum: number = 0;
     let totalWeight: number = 0;
-    Object.keys(marks).forEach(strand => {
-      const typedStrand = strand as Strand;
-      const mark = marks[typedStrand];
+    Object.keys(marks).forEach((strand: string) => {
+      const typedStrand: Strand = strand as Strand;
+      const mark: Mark | null = marks[typedStrand];
       if (mark) {
-        sum += mark.numerator/mark.denominator*mark.weight;
-        totalWeight+=mark.weight;
+        sum += (mark.numerator / mark.denominator) * mark.weight;
+        totalWeight += mark.weight;
       }
     });
     if (totalWeight === 0) {
       return null;
     }
-    return (sum/totalWeight*100).toFixed(precision);
+    return ((sum / totalWeight) * 100).toFixed(precision);
   };
 
-  // const setCourseWeights = (weights: {[strand in Strand]: number}) => {
-  //   let avg: CourseAvg = {} as any;
-  //   Object.keys(weights).forEach((strand: string) => {
-  //     const typedStrand: Strand = strand as Strand;
-  //     if (isNaN(weights[typedStrand])) return;
-  //     avg[typedStrand] = {
-  //       numerator: 0,
-  //       denominator: 0,
-  //       weight: weights[typedStrand]
-  //     };
-  //   });
-  //   setCourseAvg(avg);
-  // };
-
-
-  const getCourseData = async(): Promise<{
+  /**
+   * Get the course weights and assessment data from the database.
+   * @todo make interface for query results.
+   * @returns course weights and assessments.
+   */
+  const getCourseData = async (): Promise<{
     weights: Weights;
     assessments: Assessment[];
-}> => {
-
+  }> => {
     const course: any = await db().collection('courses').findOne({
       courseCode: courseCode,
-      date: now
+      date: now,
     });
 
+    const assessmentDocs = await db()
+      .collection('assessments')
+      .find(
+        {
+          userId: userId,
+          courseId: course._id,
+        },
+        {sort: {order: 1}},
+      )
+      .toArray();
 
-    const assessmentDocs = await db().collection('assessments').find({
-      userId: userId,
-      courseId: course._id
-    }, {sort: {order: 1}}).toArray();
-
-    const assessments: Assessment[] = await Promise.all(assessmentDocs.map(async (doc: any) => {
-      const assessment: Assessment = {
-        name: doc.name,
-        marks: doc.marks,
-        average: null,
-        feedback: doc.feedback
-      } as Assessment;
-      assessment.average = await getAssessmentAvg(assessment.marks);
-      return assessment;
-    }));
+    const assessments: Assessment[] = await Promise.all(
+      assessmentDocs.map(async (doc: any) => {
+        const assessment: Assessment = {
+          name: doc.name,
+          marks: doc.marks,
+          average: null,
+          feedback: doc.feedback,
+        } as Assessment;
+        assessment.average = await getAssessmentAvg(assessment.marks);
+        return assessment;
+      }),
+    );
     const weights: Weights = course.weights;
-    setCourseWeights(weights);
-    setAssessments(assessments);
-    return {weights: weights, assessments: assessments};
+    return {
+      weights: weights,
+      assessments: assessments,
+    };
   };
 
-  const getStrandsAvg = (assessments: Assessment[], weights: Weights) => {
-
+  /**
+   * Gets the average of each strand, used for overall strand average display.
+   * @param assessments the assessments.
+   * @param weights the course weights.
+   * @returns the average of each strand.
+   */
+  const getStrandsAvg = (
+    assessments: Assessment[],
+    weights: Weights,
+  ): StrandsAvg => {
     let totalMarks: TotalMarks = {} as any;
-    
-    assessments.map(assessment => assessment.marks).forEach(mark => {
-      Object.keys(mark).forEach(strand => {
-        const typedStrand = strand as Strand;
-        let [totalMarkStrand, markStrand] = [totalMarks[typedStrand], mark[typedStrand]];
-        
-        if (!totalMarkStrand) {
-          totalMarkStrand = {
-            total: 0,
-            weight: 0
-          };
-        }
 
-        if (markStrand && !isNaN(markStrand.weight) && markStrand.weight !== 0) {
-          totalMarkStrand.total += markStrand.numerator/markStrand.denominator*markStrand.weight;
-          totalMarkStrand.weight += markStrand.weight;
-        }
-        totalMarks[typedStrand] = totalMarkStrand;
+    assessments
+      .map((assessment: Assessment) => assessment.marks)
+      .forEach((marks: Marks) => {
+        Object.keys(marks).forEach((strand: string) => {
+          const typedStrand: Strand = strand as Strand;
+          let [totalMarkStrand, markStrand] = [
+            totalMarks[typedStrand],
+            marks[typedStrand],
+          ];
+
+          if (!totalMarkStrand) {
+            totalMarkStrand = {
+              total: 0,
+              weight: 0,
+            };
+          }
+
+          if (
+            markStrand &&
+            !isNaN(markStrand.weight) &&
+            markStrand.weight !== 0
+          ) {
+            totalMarkStrand.total +=
+              (markStrand.numerator / markStrand.denominator) *
+              markStrand.weight;
+            totalMarkStrand.weight += markStrand.weight;
+          }
+          totalMarks[typedStrand] = totalMarkStrand;
+        });
       });
-    });
 
-    let avg: CourseAvg = {
+    let avg: StrandsAvg = {
       k: null,
       t: null,
       c: null,
       a: null,
-      f: null
+      f: null,
     };
 
-    Object.keys(weights).forEach(strand => {
-      const typedStrand = strand as Strand;
-      const curStrandWeight = weights[typedStrand];
-      
+    Object.keys(weights).forEach((strand: string) => {
+      const typedStrand: Strand = strand as Strand;
+      const curStrandWeight: number | null = weights[typedStrand];
+
       if (!curStrandWeight) return;
 
       avg[typedStrand] = {
         numerator: totalMarks[typedStrand].total,
         denominator: totalMarks[typedStrand].weight,
-        weight: curStrandWeight
+        weight: curStrandWeight,
       };
     });
-    setCourseAvg(avg);
+    return avg;
   };
 
-  const refresh = async() => {
-    setRefreshing(true);
+  /**
+   * Loads the course weight data, assessment data,
+   * and recalculates the strands average.
+   * [does not refresh the database data from ta website]
+   */
+  const load = async (): Promise<void> => {
     const {assessments, weights} = await getCourseData();
-    getStrandsAvg(assessments, weights);
+    setCourseWeights(weights);
+    setAssessments(assessments);
+    const strandsAvg = getStrandsAvg(assessments, weights);
+    setStrandsAvg(strandsAvg);
+  };
+
+  /**
+   * Reloads all the data.
+   */
+  const refresh = async (): Promise<void> => {
+    setRefreshing(true);
+    await load();
     setRefreshing(false);
   };
 
+  //load all data upon mounting
   useEffect(() => {
-    (async() => {
-      const {assessments, weights} = await getCourseData();
-      getStrandsAvg(assessments, weights);
-    })();
+    load();
   }, []);
 
-  
-
-  if (!assessments || !courseAvg) {
-    return <SplashScreen/>
+  if (!assessments || !strandsAvg) {
+    return <SplashScreen />;
   }
 
-  const getAssessmentCards = () => {
-    return assessments.map(assessment => (
+  /**
+   * Get the assessment card components.
+   * @returns an array of components.
+   */
+  const getAssessmentCards = (): JSX.Element[] => {
+    return assessments.map((assessment) => (
       <AssessmentComponent
         name={assessment.name}
         marks={assessment.marks}
@@ -199,53 +239,66 @@ const DetailedAssessmentsPage: React.FC<Props> = ({navigation, route}) => {
     ));
   };
 
-  const getStrands = () => {
-    if (!courseAvg) throw new Error('courseAvg is not defined');
-    return Object.keys(courseAvg).map(strand => {
-      const typedStrand = strand as Strand;
-      return <StrandComponent 
-        strand={typedStrand} 
-        mark={courseAvg[typedStrand]}
-        courseStrand={true}/>
+  /**
+   * Gets the display for the strand averages.
+   * @returns an array of the Strand components.
+   */
+  const getStrands = (): JSX.Element[] => {
+    if (!strandsAvg) throw new Error('strandsAvg is not defined');
+    return Object.keys(strandsAvg).map((strand: string) => {
+      const typedStrand: Strand = strand as Strand;
+      return (
+        <StrandComponent
+          strand={typedStrand}
+          mark={strandsAvg[typedStrand]}
+          courseStrand={true}
+        />
+      );
     });
   };
 
-  const getCourseAvg = () => {
-    if (!courseAvg || !weights) return;
+  /**
+   * Gets the overall course average.
+   * @returns course average fixed to the user precision preference,
+   *          undefined if there are missing weights.
+   */
+  const getCourseAvg = (): string | undefined => {
+    if (!strandsAvg || !weights) return;
     let totalMark: number = 0;
     let totalWeight: number = 0;
-    Object.keys(courseAvg).forEach((strand: string) => {
+    Object.keys(strandsAvg).forEach((strand: string) => {
       const typedStrand = strand as Strand;
-      const curStrand = courseAvg[typedStrand];
+      const curStrand: Mark | null = strandsAvg[typedStrand];
       if (!curStrand || !curStrand.denominator) return;
-      totalMark += curStrand.numerator/curStrand.denominator*curStrand.weight;
+      totalMark +=
+        (curStrand.numerator / curStrand.denominator) * curStrand.weight;
       totalWeight += curStrand.weight;
     });
-    return (totalMark/totalWeight*100).toFixed(precision);
+    return ((totalMark / totalWeight) * 100).toFixed(precision);
   };
 
   return (
     <Container>
-      <GoBackNav 
-        goBack={navigation.goBack} 
+      <GoBackNav
+        goBack={navigation.goBack}
         courseCode={courseCode}
-        average={getCourseAvg()||''}/>
-      <Content refreshControl={
-        <RefreshControl 
-        refreshing={refreshing} 
-        onRefresh={refresh} 
-        colors={[colour.refresh]}/>
-      }
-      style={{
-        backgroundColor: colour.background,
-        padding: 15
-      }}
-      >
-        <View style={styles.courseAvg}>
-          {getStrands()}
-        </View>
+        average={getCourseAvg() || ''}
+      />
+      <Content
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            colors={[colour.refresh]}
+          />
+        }
+        style={{
+          backgroundColor: colour.background,
+          padding: 15,
+        }}>
+        <View style={styles.courseAvg}>{getStrands()}</View>
         {getAssessmentCards()}
-        <View style={{height: 40}}/>
+        <View style={{height: 40}} />
       </Content>
     </Container>
   );
@@ -258,10 +311,9 @@ const getStyles = (colour: ThemeColour) => {
       marginLeft: 'auto',
       marginRight: 'auto',
       marginBottom: 20,
-      marginTop: 25
-    }
+      marginTop: 25,
+    },
   });
 };
-
 
 export default DetailedAssessmentsPage;

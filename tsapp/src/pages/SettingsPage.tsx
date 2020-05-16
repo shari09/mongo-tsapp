@@ -1,38 +1,48 @@
-import React, {useState, useContext, useEffect, useRef} from 'react';
-import {View, StyleSheet, Switch, TextInput, RefreshControl,} from 'react-native';
-import {Container, Content, Text, Icon, Spinner, Picker} from 'native-base';
 import AsyncStorage from '@react-native-community/async-storage';
-
-import {UserContext, ThemeContext, ThemeColour} from '../utils/contexts';
-import {createToast} from '../utils/toast';
-import {getUser, updateUserSetting} from '../utils/functions';
+import {Container, Content, Icon, Picker, Spinner, Text} from 'native-base';
+import React, {useContext, useEffect, useRef, useState} from 'react';
+import {
+  RefreshControl,
+  StyleSheet,
+  Switch,
+  TextInput,
+  View,
+} from 'react-native';
+import Button from '../components/Button';
 import HeaderNav from '../components/HeaderNav';
-import SaveButton from '../components/LoginButton';
 import SplashScreen from '../components/SplashScreen';
+import {
+  IUserContext,
+  Theme,
+  ThemeColour,
+  ThemeContext,
+  UserContext,
+} from '../utils/contexts';
+import {getUser, updateUserSetting} from '../utils/functions';
+import {createToast} from '../utils/toast';
 
 interface EditProps {
   text: string;
   setText: (value: string) => void;
   input: React.RefObject<TextInput>;
-};
+}
 
 const EditField = React.forwardRef<TextInput, EditProps>((props, ref) => {
-
-  const {colour} = useContext(ThemeContext);
+  const {colour} = useContext<Theme>(ThemeContext);
   const editStyles = getEditStyles(colour);
   return (
     <View style={editStyles.wrapper}>
       <TextInput
-          style={editStyles.text}
-          underlineColorAndroid='#5f5d91'
-          onChangeText={props.setText}
-          selectTextOnFocus
-          value={props.text}
-          ref={ref}
-        />
-      <Icon 
-        type='SimpleLineIcons' 
-        name='pencil' 
+        style={editStyles.text}
+        underlineColorAndroid="#5f5d91"
+        onChangeText={props.setText}
+        selectTextOnFocus
+        value={props.text}
+        ref={ref}
+      />
+      <Icon
+        type="SimpleLineIcons"
+        name="pencil"
         style={editStyles.icon}
         onPress={() => props.input.current?.focus()}
       />
@@ -57,32 +67,38 @@ const getEditStyles = (colour: ThemeColour) => {
       fontSize: 20,
       marginLeft: 4,
       color: 'gray',
-    }
+    },
   });
   return editStyles;
 };
-
 
 /////////////////////////
 
 interface Props {
   navigation: any;
-};
+}
 
 const SettingsPage: React.FC<Props> = ({navigation}) => {
   const {
-    userId, 
-    name, setName, 
-    animationEnabled, setAnimationEnabled, 
-    darkMode, setDarkMode,
-    precision, setPrecision
-  } = useContext(UserContext);
-  if (!userId || !setName || !setAnimationEnabled || !setPrecision) return <SplashScreen/>
+    userId,
+    name,
+    setName,
+    animationEnabled,
+    setAnimationEnabled,
+    darkMode,
+    setDarkMode,
+    precision,
+    setPrecision,
+  } = useContext<IUserContext>(UserContext);
+  if (!userId || !setName || !setAnimationEnabled || !setPrecision)
+    return <SplashScreen />;
 
-  const {colour} = useContext(ThemeContext);
+  const {colour} = useContext<Theme>(ThemeContext);
   const styles = getStyles(colour);
 
-  const [notificationEnabled, setNotificationEnabled] = useState<boolean|null>(null);
+  const [notificationEnabled, setNotificationEnabled] = useState<
+    boolean | null
+  >(null);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -91,7 +107,7 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
   /**
    * Gets the user settings.
    */
-  const getData = async(): Promise<void> => {
+  const getData = async (): Promise<void> => {
     const user = await getUser(userId);
     setNotificationEnabled(user.notificationEnabled);
     setPrecision(user.precision);
@@ -106,17 +122,17 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
   /**
    * Refreshes user data by fetching the data from database.
    */
-  const refresh = async(): Promise<void> => {
+  const refresh = async (): Promise<void> => {
     setRefreshing(true);
     await getData();
     setRefreshing(false);
   };
 
   /**
-   * Updates the data to both the database and locally 
+   * Updates the data to both the database and locally
    * for the session of the app.
    */
-  const updateSettings = async(): Promise<void> => {
+  const updateSettings = async (): Promise<void> => {
     if (!input.current || !name) return;
 
     setIsUpdating(true);
@@ -125,120 +141,146 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
     if (!name.trim()) {
       createToast({
         text: 'Please fill out a name',
-        type: 'warning'
+        type: 'warning',
       });
       setIsUpdating(false);
       return;
     }
 
-    if (precision === null) throw new Error('missing precision, developer side problem');
+    if (precision === null)
+      throw new Error('missing precision, developer side problem');
     await updateUserSetting({
       userId: userId,
-      notificationEnabled: notificationEnabled||false,
+      notificationEnabled: notificationEnabled || false,
       precision: precision,
-      animationEnabled: animationEnabled||false,
+      animationEnabled: animationEnabled || false,
       displayName: name,
     });
     console.log('update user settings');
 
     await AsyncStorage.setItem('theme', darkMode ? 'dark' : 'light');
-    
+
     setIsUpdating(false);
   };
 
-
-  if (notificationEnabled === null 
-      || precision === null 
-      || name === null
-      || animationEnabled === null
-    ) {
-    return <SplashScreen/>;
+  if (
+    notificationEnabled === null ||
+    precision === null ||
+    name === null ||
+    animationEnabled === null
+  ) {
+    return <SplashScreen />;
   }
 
   return (
     <Container>
-      <HeaderNav toggleDrawer={navigation.toggleDrawer} heading='Settings'/>
-      <Content 
-        style={styles.content} 
+      <HeaderNav toggleDrawer={navigation.toggleDrawer} heading="Settings" />
+      <Content
+        style={styles.content}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={refresh} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
             colors={[colour.refresh]}
           />
         }
-        refreshing={refreshing}
-      >
-        
+        refreshing={refreshing}>
         <View style={styles.row}>
-          <Icon style={styles.icon} type='MaterialIcons' name='person-outline'/>
+          <Icon
+            style={styles.icon}
+            type="MaterialIcons"
+            name="person-outline"
+          />
           <Text style={styles.text}>Display name</Text>
         </View>
-        <EditField input={input} ref={input} text={name||''} setText={setName}/>
+        <EditField
+          input={input}
+          ref={input}
+          text={name || ''}
+          setText={setName}
+        />
         <View style={styles.row}>
-          <Icon style={styles.icon} type='SimpleLineIcons' name='bell'/>
+          <Icon style={styles.icon} type="SimpleLineIcons" name="bell" />
           <Text style={styles.text}>Notification</Text>
-          <Switch 
+          <Switch
             style={styles.switch}
-            value={notificationEnabled} 
+            value={notificationEnabled}
             onValueChange={setNotificationEnabled}
-            trackColor={{ 
-              false: colour.settings.track.off, 
+            trackColor={{
+              false: colour.settings.track.off,
               true: colour.settings.track.on,
             }}
-            thumbColor={notificationEnabled ? colour.settings.thumb.on : colour.settings.thumb.off}
+            thumbColor={
+              notificationEnabled
+                ? colour.settings.thumb.on
+                : colour.settings.thumb.off
+            }
           />
         </View>
         <View style={styles.row}>
-          <Icon style={styles.icon} type='MaterialIcons' name='touch-app'/>
+          <Icon style={styles.icon} type="MaterialIcons" name="touch-app" />
           <Text style={styles.text}>Flip animation</Text>
-          <Switch 
+          <Switch
             style={styles.switch}
-            value={animationEnabled} 
+            value={animationEnabled}
             onValueChange={setAnimationEnabled}
-            trackColor={{ 
-              false: colour.settings.track.off, 
+            trackColor={{
+              false: colour.settings.track.off,
               true: colour.settings.track.on,
             }}
-            thumbColor={animationEnabled ? colour.settings.thumb.on : colour.settings.thumb.off}
+            thumbColor={
+              animationEnabled
+                ? colour.settings.thumb.on
+                : colour.settings.thumb.off
+            }
           />
         </View>
         <View style={styles.row}>
-          <Icon style={styles.icon} type='MaterialCommunityIcons' name='theme-light-dark'/>
+          <Icon
+            style={styles.icon}
+            type="MaterialCommunityIcons"
+            name="theme-light-dark"
+          />
           <Text style={styles.text}>Dark mode</Text>
-          <Switch 
+          <Switch
             style={styles.switch}
-            value={darkMode} 
+            value={darkMode}
             onValueChange={setDarkMode}
-            trackColor={{ 
-              false: colour.settings.track.off, 
+            trackColor={{
+              false: colour.settings.track.off,
               true: colour.settings.track.on,
             }}
-            thumbColor={darkMode ? colour.settings.thumb.on : colour.settings.thumb.off}
+            thumbColor={
+              darkMode ? colour.settings.thumb.on : colour.settings.thumb.off
+            }
           />
         </View>
         <View style={styles.row}>
-          <Icon style={styles.icon} type='Octicons' name='settings'/>
+          <Icon style={styles.icon} type="Octicons" name="settings" />
           <Text style={styles.text}>Displayed decimals</Text>
-          <Icon style={styles.dropdown} name='caretdown' type='AntDesign'/>
+          {/* custom dropdown icon for custom colour for different colour themes */}
+          <Icon style={styles.dropdown} name="caretdown" type="AntDesign" />
           <View style={styles.pickerWrapper}>
             <Picker
               selectedValue={precision}
               onValueChange={setPrecision}
               style={styles.picker}
-              mode='dropdown'
-            >
-              <Picker.Item label='0' value={0}/>
-              
-              <Picker.Item label='1' value={1}/>
-              <Picker.Item label='2' value={2}/>
-              <Picker.Item label='3' value={3}/>
-              <Picker.Item label='4' value={4}/>
+              mode="dropdown">
+              <Picker.Item label="0" value={0} />
+
+              <Picker.Item label="1" value={1} />
+              <Picker.Item label="2" value={2} />
+              <Picker.Item label="3" value={3} />
+              <Picker.Item label="4" value={4} />
             </Picker>
           </View>
         </View>
-        {isUpdating ? <Spinner color='blue'/> : null}
-        <SaveButton style={styles.button} buttonOnPress={updateSettings} buttonText='Save'/>
+        {isUpdating ? <Spinner color="blue" /> : null}
+        <Button
+          style={styles.button}
+          buttonOnPress={updateSettings}
+          buttonText="Save"
+        />
       </Content>
     </Container>
   );
@@ -294,11 +336,9 @@ const getStyles = (colour: ThemeColour) => {
       alignSelf: 'center',
       color: colour.settings.icon,
       textAlign: 'center',
-    }
+    },
   });
   return styles;
 };
-
-
 
 export default SettingsPage;
