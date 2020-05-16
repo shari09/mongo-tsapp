@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-community/async-storage';
-import notifee from '@notifee/react-native';
+import notifee, {Notification, AndroidStyle} from '@notifee/react-native';
 import messaging, {FirebaseMessagingTypes} from '@react-native-firebase/messaging';
 
 import {Stitch, StitchAppClient, StitchUser} from 'mongodb-stitch-react-native-sdk';
@@ -35,6 +35,7 @@ const App = () => {
   const [stitchInitialized, setStitchInitialized] = useState<boolean>(false);
 
   useEffect(() => {
+    if (Stitch.hasAppClient('tsapp-idjxn')) return;
     Stitch.initializeDefaultAppClient('tsapp-idjxn').then(() => {
       setStitchInitialized(true);
     }).catch(console.log);
@@ -128,7 +129,6 @@ const App = () => {
   };
 
 
-
   useEffect(() => {
     (async() => {
       const theme = await AsyncStorage.getItem('theme');
@@ -139,7 +139,33 @@ const App = () => {
   }, []);
 
 
-  
+
+  const displayNotification = async(data: any) => {
+
+    const channelId = await notifee.createChannel({
+      id: 'markUpdates',
+      name: 'Mark Updates'
+    });
+    const name: string = data.name;
+    const long = name.length > 30;
+
+    const notification: Notification = {
+      title: data.courseCode,
+      body: `${long ? name.slice(0, 30)+'... ' : name}: ${data.average}%`,
+      android: {
+        channelId,
+        pressAction: {
+          id: 'default',
+          launchActivity: 'default'
+        },
+        style: long ? {
+          type: AndroidStyle.BIGTEXT, 
+          text: `${name}: ${data.average}%`
+        }: undefined
+      }
+    };
+    notifee.displayNotification(notification);
+  };
 
 
   //add token listeners
@@ -155,9 +181,10 @@ const App = () => {
       });
       messaging().setBackgroundMessageHandler(async (remoteMessage) => {
         console.log('background message: ');
-        console.log(remoteMessage);
+        console.log(remoteMessage.data);
+        displayNotification(remoteMessage.data);
       });
-      messaging().onMessage(async remoteMessage => {
+      messaging().onMessage(remoteMessage => {
         console.log('foreground message: ');
         console.log(remoteMessage);
       });

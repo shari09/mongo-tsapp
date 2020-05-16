@@ -73,9 +73,6 @@ const CoursesOverviewPage: React.FC<Props> = ({navigation}) => {
   }, []);
 
   if (!courses) {
-    console.log(courses);
-    // console.log('sldfslkfdj');
-    // console.log('no courses');
     return <SplashScreen/>
   }
 

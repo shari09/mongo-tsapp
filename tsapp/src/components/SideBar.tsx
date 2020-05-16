@@ -1,5 +1,5 @@
-import React, {useContext} from 'react';
-import {Image, StyleSheet, View} from 'react-native';
+import React, {useState, useContext} from 'react';
+import {Image, StyleSheet} from 'react-native';
 import {
   DrawerContentScrollView, 
   DrawerItem,
@@ -10,16 +10,18 @@ import {Icon, Text} from 'native-base';
 import {Stitch} from 'mongodb-stitch-react-native-sdk';
 import {ThemeColour} from '../utils/contexts';
 import {ThemeContext} from '../utils/contexts';
+import Logout from './Logout';
 
 
 //this was one long component
 const SideBar: React.FC<DrawerContentComponentProps<DrawerContentOptions>> = (props) => {
 
-  //signing out
+  
 
   const {colour} = useContext(ThemeContext);
   const styles = getStyles(colour);
 
+  //signing out
   const signOut = async() => {
     try {
       await Stitch.defaultAppClient.auth.logout();
@@ -27,6 +29,8 @@ const SideBar: React.FC<DrawerContentComponentProps<DrawerContentOptions>> = (pr
       console.log(err);
     }
   };
+
+  const [loggingOut, setLoggingOut] = useState<boolean>(false);
 
 
   const curRoute = props.state.routes[props.state.index].name;
@@ -66,12 +70,13 @@ const SideBar: React.FC<DrawerContentComponentProps<DrawerContentOptions>> = (pr
         icon={() => <Icon style={styles.icon} name='log-out'/>}
         focused={curRoute === 'Logout'}
         onPress={() => {
-          props.navigation.navigate('Logout');
-          props.navigation.openDrawer(); //idk why this shows error but it works so...
+          setLoggingOut(true);
           signOut();
         }}
       />
+      <Logout loggingOut={loggingOut}/>
     </DrawerContentScrollView>
+    
   );
 
 };

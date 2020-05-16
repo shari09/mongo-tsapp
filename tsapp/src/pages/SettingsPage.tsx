@@ -218,7 +218,6 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
       </Content>
     </Container>
   );
-
 };
 
 const getStyles = (colour: ThemeColour) => {

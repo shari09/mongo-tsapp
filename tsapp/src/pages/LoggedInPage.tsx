@@ -32,10 +32,6 @@ const LoggedInPage: React.FC<Props> = ({navigation}) => {
         name='Settings'
         component={SettingsPage}
       />
-      <Drawer.Screen
-        name='Logout'
-        component={Logout}
-      />
     </Drawer.Navigator>
   );
 };

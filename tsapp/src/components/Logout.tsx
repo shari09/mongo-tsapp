@@ -1,26 +1,27 @@
 import React, {useContext} from 'react';
 import {View, StyleSheet} from 'react-native';
 import Modal from 'react-native-modal';
-import {Spinner, Text} from 'native-base';
+import {Spinner} from 'native-base';
 
 
-import {UserContext, ThemeContext} from '../utils/contexts';
+import {UserContext} from '../utils/contexts';
 
+interface Props {
+  loggingOut: boolean;
+};
 
-const Logout: React.FC = () => {
+const Logout: React.FC<Props> = ({loggingOut}) => {
   const {isLoggedIn} = useContext(UserContext);
-  const {colour} = useContext(ThemeContext);
 
   return (
-    <View style={{backgroundColor: colour.background}}>
+    <View>
       <Modal 
-        isVisible={isLoggedIn} 
+        isVisible={isLoggedIn && loggingOut} 
         animationIn='zoomInDown' 
         animationOut='zoomOutUp'
       >
         <View style={styles.content}>
           <Spinner style={styles.spinner}/>
-          {/* <Text style={styles.text}>Logging out...</Text> */}
         </View>
       </Modal>
     </View>
@@ -37,11 +38,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 'auto',
     marginLeft: 'auto'
-  },
-  // text: {
-  //   marginRight: 'auto',
-  //   flex: 3
-  // }
+  }
 });
 
 export default Logout;

@@ -151,7 +151,7 @@ const getAssessments = (coursePage) => {
         assessment.marks[strand].denominator = Number(strandMarkMatch[2]);
         assessment.marks[strand].weight = Number(strandWeightMatch[2]);
   
-        //strip it so it won't match the same strand
+        //strip it so the weight won't match the same strand
         assessmentStr = assessmentStr.slice(strandWeightMatch.index);
       } else {
         assessment.marks[strand] = null;
@@ -188,27 +188,24 @@ const filterSpecialSymbols = (sentence) => {
 
 const getCourseOverviews = (homePage) => {
   homePage = homePage.replace(/\s+/g, ' ');
-  const courseRegex = /<tr bgcolor="#(ddffff|eeffff)">.*?<\/td>/g;
-
+  const courseRegexStr = 
+    '<tr bgcolor="#(ddffff|eeffff)">.*?'
+    + '(.{6}-.{2}).*?'
+    + ':(.*?)<br>.*?'
+    + 'Block:(.*?)-.*?'
+    + 'rm\.(.*?)<.*?'
+    + '<\/td>';
+  const courseRegex = new RegExp(courseRegexStr, 'g');
   let courseMatch = courseRegex.exec(homePage);
   
   let courseOverviews = [];
   while (courseMatch) {
-    const courseMatchStr = courseMatch[0];
-    const courseOverview = {};
-    let match;
-    
-    match = /(.{6}-.{2})/.exec(courseMatchStr);
-    courseOverview.courseCode = match ? match[1] : '';
-  
-    match = /:(.*?)<br>/.exec(courseMatchStr);
-    courseOverview.name = match ? match[1].trim() : '';
-  
-    match = /Block:(.*?)-/.exec(courseMatchStr);
-    courseOverview.period = match ? match[1].trim() : '';
-  
-    match = /rm\.(.*?)</gs.exec(courseMatchStr);
-    courseOverview.room = match ? match[1].trim() : '';
+    const courseOverview = {
+      courseCode: courseMatch[2] ? courseMatch[2] : '',
+      name: courseMatch[3] ? courseMatch[3] : '',
+      period: courseMatch[4] ? courseMatch[4] : '',
+      room: courseMatch[5] ? courseMatch[5] : ''
+    };
   
     courseOverviews.push(courseOverview);
     courseMatch = courseRegex.exec(homePage);
@@ -246,7 +243,7 @@ const updateDB = async(courses, userId) => {
 
         
         //add the student to the course
-        if (courseDoc.students.indexOf(userId) > -1) {
+        if (courseDoc.students.indexOf(userId) === -1) {
           const query = {_id: docId};
           const update = {
             $addToSet: {
@@ -410,11 +407,13 @@ const updateAssessments = async(course, courseId, userId) => {
     const assessment = taAssessment[0];
     console.log(`new mark ${course.courseCode}`);
     modified = true;
-    const res = await sendMarkNotif(userId, course.courseCode, assessment);
+    let avg = getAssessmentAvg(assessment.marks);
+    const res = await sendMarkNotif(userId, course.courseCode, assessment, avg);
     return assessmentCollection.insertOne({
       userId: userId,
       courseId: courseId,
       order: taAssessment[1],
+      average: avg,
       ...assessment
     });
   }));
@@ -422,12 +421,11 @@ const updateAssessments = async(course, courseId, userId) => {
 
 };
 
-const sendMarkNotif = async(userId, courseCode, assessment) => {
+const sendMarkNotif = async(userId, courseCode, assessment, avg) => {
   const db = context.services.get('tsapp-service').db('tsapp');
   return new Promise(async(resolve, reject) => {
     const user = await db.collection('users').findOne({_id: userId});
     let bodyText;
-    let avg = getAssessmentAvg(assessment.marks);
     avg = avg ? (avg*100).toFixed(user.precision) : null;
 
     if (avg) {
@@ -437,11 +435,13 @@ const sendMarkNotif = async(userId, courseCode, assessment) => {
     }
 
     const notification = {
-      notification: {
-        title: courseCode,
-        body: bodyText,
+      to: user.fcmToken,
+      data: {
+        courseCode: courseCode,
+        average: avg,
+        ...assessment
       },
-      to: user.fcmToken
+      priority: 'high'
     };
 
     resolve(context.http.post({
@@ -522,8 +522,6 @@ const updateCourseOverviews = async(userId, courseOverviews) => {
   }
   
 };
-
-
 
 const run = async (userId) => {
   const db = context.services.get('tsapp-service').db('tsapp');
