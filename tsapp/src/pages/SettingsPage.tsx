@@ -1,5 +1,5 @@
 import React, {useState, useContext, useEffect, useRef} from 'react';
-import {View, StyleSheet, Switch, TextInput, RefreshControl} from 'react-native';
+import {View, StyleSheet, Switch, TextInput, RefreshControl,} from 'react-native';
 import {Container, Content, Text, Icon, Spinner, Picker} from 'native-base';
 import AsyncStorage from '@react-native-community/async-storage';
 
@@ -50,13 +50,13 @@ const getEditStyles = (colour: ThemeColour) => {
       fontSize: 20,
       fontFamily: 'sans-serif',
       marginRight: 2,
-      color: colour.settings.text
+      color: colour.settings.text,
     },
     icon: {
       alignSelf: 'center',
       fontSize: 20,
       marginLeft: 4,
-      color: 'gray'
+      color: 'gray',
     }
   });
   return editStyles;
@@ -88,27 +88,41 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
 
   const input = useRef<TextInput>(null);
 
-  const getData = async() => {
+  /**
+   * Gets the user settings.
+   */
+  const getData = async(): Promise<void> => {
     const user = await getUser(userId);
     setNotificationEnabled(user.notificationEnabled);
     setPrecision(user.precision);
     setName(user.displayName);
   };
 
+  //initial call to get user settings
   useEffect(() => {
     getData();
   }, []);
 
-  const refresh = async() => {
+  /**
+   * Refreshes user data by fetching the data from database.
+   */
+  const refresh = async(): Promise<void> => {
     setRefreshing(true);
     await getData();
     setRefreshing(false);
   };
 
-  const updateSettings = async() => {
+  /**
+   * Updates the data to both the database and locally 
+   * for the session of the app.
+   */
+  const updateSettings = async(): Promise<void> => {
+    if (!input.current || !name) return;
+
     setIsUpdating(true);
-    input.current?.blur();
-    if (!name?.trim()) {
+    input.current.blur();
+
+    if (!name.trim()) {
       createToast({
         text: 'Please fill out a name',
         type: 'warning'
@@ -116,15 +130,16 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
       setIsUpdating(false);
       return;
     }
+
     if (precision === null) throw new Error('missing precision, developer side problem');
-    let res = await updateUserSetting({
+    await updateUserSetting({
       userId: userId,
       notificationEnabled: notificationEnabled||false,
       precision: precision,
       animationEnabled: animationEnabled||false,
-      displayName: name
+      displayName: name,
     });
-    console.log('update user settings', res);
+    console.log('update user settings');
 
     await AsyncStorage.setItem('theme', darkMode ? 'dark' : 'light');
     
@@ -167,7 +182,10 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
             style={styles.switch}
             value={notificationEnabled} 
             onValueChange={setNotificationEnabled}
-            trackColor={{ false: colour.settings.track.off, true: colour.settings.track.on}}
+            trackColor={{ 
+              false: colour.settings.track.off, 
+              true: colour.settings.track.on,
+            }}
             thumbColor={notificationEnabled ? colour.settings.thumb.on : colour.settings.thumb.off}
           />
         </View>
@@ -178,7 +196,10 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
             style={styles.switch}
             value={animationEnabled} 
             onValueChange={setAnimationEnabled}
-            trackColor={{ false: colour.settings.track.off, true: colour.settings.track.on}}
+            trackColor={{ 
+              false: colour.settings.track.off, 
+              true: colour.settings.track.on,
+            }}
             thumbColor={animationEnabled ? colour.settings.thumb.on : colour.settings.thumb.off}
           />
         </View>
@@ -189,7 +210,10 @@ const SettingsPage: React.FC<Props> = ({navigation}) => {
             style={styles.switch}
             value={darkMode} 
             onValueChange={setDarkMode}
-            trackColor={{ false: colour.settings.track.off, true: colour.settings.track.on}}
+            trackColor={{ 
+              false: colour.settings.track.off, 
+              true: colour.settings.track.on,
+            }}
             thumbColor={darkMode ? colour.settings.thumb.on : colour.settings.thumb.off}
           />
         </View>
@@ -224,7 +248,7 @@ const getStyles = (colour: ThemeColour) => {
   const styles = StyleSheet.create({
     content: {
       padding: 20,
-      backgroundColor: colour.background
+      backgroundColor: colour.background,
     },
     row: {
       flexDirection: 'row',
@@ -234,26 +258,26 @@ const getStyles = (colour: ThemeColour) => {
       borderWidth: 1,
       borderColor: 'gray',
       marginLeft: 'auto',
-      borderRadius: 5
+      borderRadius: 5,
     },
     picker: {
       marginLeft: 'auto',
       height: 40,
       width: 100,
-      color: colour.settings.text
+      color: colour.settings.text,
     },
     text: {
       fontFamily: 'sans-serif',
       fontSize: 18,
       alignSelf: 'center',
-      color: colour.settings.text
+      color: colour.settings.text,
     },
     switch: {
       marginLeft: 'auto',
-      alignSelf: 'center'
+      alignSelf: 'center',
     },
     button: {
-      marginTop: 20
+      marginTop: 20,
     },
     dropdown: {
       flex: 2,
@@ -262,14 +286,14 @@ const getStyles = (colour: ThemeColour) => {
       position: 'absolute',
       marginLeft: '92%',
       alignSelf: 'center',
-      zIndex: 2
+      zIndex: 2,
     },
     icon: {
       marginRight: 15,
       fontSize: 23,
       alignSelf: 'center',
       color: colour.settings.icon,
-      textAlign: 'center'
+      textAlign: 'center',
     }
   });
   return styles;

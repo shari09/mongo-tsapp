@@ -26,7 +26,7 @@ export const UserContext = React.createContext<IUserContext>({
   darkMode: false,
   setDarkMode: undefined,
   precision: 2,
-  setPrecision: undefined
+  setPrecision: undefined,
 });
 
 
@@ -72,12 +72,12 @@ export interface ThemeColour {
     icon: string;
     text: string;
     thumb: {
-      on: string,
-      off: string
+      on: string;
+      off: string;
     },
     track: {
-      on: string,
-      off: string
+      on: string;
+      off: string;
     }
   },
   refresh: string;
@@ -90,36 +90,36 @@ export const lightTheme: ThemeColour  = {
     background: colour.LIGHT_GRAY,
     text: 'black',
     dropShadow: colour.LIGHT_GRAY,
-    icon: colour.DARK_GRAY
+    icon: colour.DARK_GRAY,
   },
   sidebar: {
     icon: 'black',
     inactiveText: colour.DARK_GRAY,
     activeText: adobeAnalogousPastel.BLUE,
     activeBackground: '#ebf4ff',
-    inactiveBackground: colour.LIGHT_LIGHT_GRAY
+    inactiveBackground: colour.LIGHT_LIGHT_GRAY,
   },
   button: {
     background: adobeAnalogousBlue.BLUE,
-    text: 'white'
+    text: 'white',
   },
   courseCard: {
     border: adobeMonochromaticBlue.LIGHT_BLUE,
     otherInfo: adobeAnalogousBlue.LIGHT_BLUE,
     percent: adobeAnalogousPastel.BLUE,
     courseCode: '#675cb8',
-    background: colour.LIGHT_LIGHT_GRAY
+    background: colour.LIGHT_LIGHT_GRAY,
   },
   assessmentCard: {
     strand: {
       null: adobeAnalogousBlue.MAGENTA,
       text: adobeAnalogousBlue.BLUE,
       outline: '#6991f0',
-      percent: '#4e7be6'
+      percent: '#4e7be6',
     },
     border: adobeMonochromaticBlue.LIGHT_BLUE,
     text: colour.BLUE,
-    background: 'white'
+    background: 'white',
   },
   settings: {
     icon: colour.DARK_GRAY,
@@ -129,11 +129,11 @@ export const lightTheme: ThemeColour  = {
     },
     track: {
       on: '#d9e4ff',
-      off: '#dbdbdb'
+      off: '#dbdbdb',
     },
-    text: 'black'
+    text: 'black',
   },
-  refresh: adobeAnalogousBlue.BLUE_VIOLET
+  refresh: adobeAnalogousBlue.BLUE_VIOLET,
 };
 
 export const darkTheme: ThemeColour = {
@@ -143,25 +143,25 @@ export const darkTheme: ThemeColour = {
     background: '#1f1f1f',
     dropShadow: '#121212',
     text: '#FFFFFFDE',
-    icon: '#FFFFFFDE'
+    icon: '#FFFFFFDE',
   },
   sidebar: {
     icon: '#ffffffAB',
     inactiveText: '#ffffffD6',
     activeText: adobeAnalogousPastel.BLUE,
     activeBackground: '#ffffff0D',
-    inactiveBackground: '#121212'
+    inactiveBackground: '#121212',
   },
   button: {
     background: '#5E5DE8B0',
-    text: 'white'
+    text: 'white',
   },
   courseCard: {
     border: 'black',
     otherInfo: '#668DFFB3',
     percent: adobeAnalogousBlue.BLUE,
     courseCode: '#9B73FFDE',
-    background: '#1d1d1d'
+    background: '#1d1d1d',
   },
   assessmentCard: {
     strand: {
@@ -172,21 +172,21 @@ export const darkTheme: ThemeColour = {
     },
     border: '#1d1d1d',
     text: '#FFFFFFDE',
-    background: '#1d1d1d'
+    background: '#1d1d1d',
   },
   settings: {
     icon: '#ffffffB3',
     thumb: {
       on: '#2848bd',
-      off: '#cccccc'
+      off: '#cccccc',
     },
     track: {
       on: '#2848bdB3',
-      off: '#ffffffB0'
+      off: '#ffffffB0',
     },
-    text: '#ffffffDE'
+    text: '#ffffffDE',
   },
-  refresh: adobeAnalogousBlue.BLUE_VIOLET
+  refresh: adobeAnalogousBlue.BLUE_VIOLET,
 };
 
 export interface Theme {
@@ -196,5 +196,5 @@ export interface Theme {
 
 export const ThemeContext = React.createContext<Theme>({
   mode: 'dark',
-  colour: darkTheme
+  colour: darkTheme,
 });

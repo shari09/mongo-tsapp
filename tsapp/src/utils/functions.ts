@@ -1,19 +1,15 @@
 import {
   Stitch, 
   RemoteMongoClient,
+  RemoteMongoDatabase,
 } from 'mongodb-stitch-react-native-sdk';
 import {ObjectId} from 'bson';
 
 
-export const db = () => {
+export const db = (): RemoteMongoDatabase => {
   return Stitch.defaultAppClient
-  .getServiceClient(RemoteMongoClient.factory, 'tsapp-service')
-  .db('tsapp');
-};
-
-
-export const errorCodes = {
-  INVALID_CREDENTIALS: 0
+    .getServiceClient(RemoteMongoClient.factory, 'tsapp-service')
+    .db('tsapp');
 };
 
 export interface FcmToken {
@@ -53,44 +49,76 @@ export type Marks = {
 export type Strand = 'k'|'t'|'c'|'a'|'f';
 
 
-
-export const updateFcmToken = (fcmToken: FcmToken) => {
+/**
+ * Updates the FCM to database.
+ * @param fcmToken the user's FCM token and userId.
+ */
+export const updateFcmToken = (fcmToken: FcmToken): Promise<void> => {
   return updateData(fcmToken);
 }
 
-export const updateNotificationSettings = (notificationPermission: NotificationSettings) => {
+/**
+ * A user's permission is enabled by default on Android,
+ * but is requested on IOS.
+ * 
+ * @param notificationPermission the user's permission settings.
+ */
+export const updateNotificationSettings = (
+  notificationPermission: NotificationSettings
+): Promise<void> => {
   return updateData(notificationPermission);
 };
 
-export const updateUserSetting = (userSetting: UserSetting) => {
+/**
+ * Updates the user's custom settings to database.
+ * @param userSetting the user's custom settings.
+ */
+export const updateUserSetting = (userSetting: UserSetting): Promise<void> => {
   return updateData(userSetting);
 };
 
-export const setDBLoggedIn = (dbLoggedIn: DBLoggedIn) => {
+/**
+ * Different from the loggedIn state variable from App.tsx,
+ * sets whether the user is logged in the entire app even if it is running 
+ * in the background.
+ * 
+ * @param dbLoggedIn whether a user is logged in with persistence state
+ */
+export const setDBLoggedIn = (dbLoggedIn: DBLoggedIn): Promise<void> => {
   return updateData(dbLoggedIn);
 };
 
 
-//updating to cloud firestore
-const updateData = async (data: FcmToken|NotificationSettings|DBLoggedIn|UserSetting) => {
+/**
+ * Search the user by userId and updates whatever data that's needed.
+ * @param data the data that needs to be updated to database
+ */
+const updateData = async (data:
+   FcmToken
+   |NotificationSettings
+   |DBLoggedIn
+   |UserSetting
+): Promise<void> => {
   
-  const userId = data.userId;
+  const userId: ObjectId = data.userId;
   delete data.userId;
   try {
     await db().collection('users').findOneAndUpdate({
-      _id: userId
+      _id: userId,
     }, {
-      $set: {...data}
+      $set: {...data},
     });
     console.log('successfully updated');
-    return 'successfully updated';
 
   } catch (err) {
-    return err;
+    console.log(err);
   }
 };
 
-
+/**
+ * Get the date in terms of Feb/Sep for semesters.
+ * @returns the date
+ */
 export const getDate = (): string => {
   const now = new Date();
   if (now.getMonth() >= 1 && now.getMonth() < 8) {
@@ -101,6 +129,12 @@ export const getDate = (): string => {
   }
 };
 
+/**
+ * Gets the user document from the database.
+ * @param userId the userId
+ * @returns the user document
+ * @todo make a user interface
+ */
 export const getUser = async(userId: ObjectId): Promise<any> => {
   const user: any = await db().collection('users').findOne({
     _id: userId

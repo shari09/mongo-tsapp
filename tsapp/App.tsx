@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import notifee, {Notification, AndroidStyle} from '@notifee/react-native';
 import messaging, {FirebaseMessagingTypes} from '@react-native-firebase/messaging';
 
-import {Stitch, StitchAppClient, StitchUser} from 'mongodb-stitch-react-native-sdk';
+import {Stitch, StitchAppClient, StitchUser, StitchAuth} from 'mongodb-stitch-react-native-sdk';
 
 import {Root} from 'native-base';
 import {NavigationContainer} from '@react-navigation/native';
@@ -24,7 +24,7 @@ import {ObjectId} from 'bson';
 const Stack = createStackNavigator();
 
 
-const App = () => {
+const App: React.FC = () => {
   const [userId, setUserId] = useState<ObjectId|undefined>();
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const [initializing, setInitializing] = useState<boolean>(true);
@@ -34,6 +34,8 @@ const App = () => {
   const [precision, setPrecision] = useState<number>(2);
   const [stitchInitialized, setStitchInitialized] = useState<boolean>(false);
 
+
+  //checks if the Stitch app is initialized, if not, initialize the app
   useEffect(() => {
     if (Stitch.hasAppClient('tsapp-idjxn')) return;
     Stitch.initializeDefaultAppClient('tsapp-idjxn').then(() => {
@@ -41,12 +43,19 @@ const App = () => {
     }).catch(console.log);
   }, []);
 
-  const initUser = async() => {
+  /**
+   * Initialize user settings.
+   * Set app initalization to false.
+   */
+  const initUser = async(): Promise<void> => {
     if (!userId) return;
-    const updatedToken = await getToken();
+    const updatedToken: boolean = await getToken();
     if (!updatedToken) updateToken();
     
-    setDBLoggedIn({userId: userId, loggedIn: true});
+    setDBLoggedIn({
+      userId: userId, 
+      loggedIn: true,
+    });
     const user = await getUser(userId);
     setAnimationEnabled(user.animationEnabled);
     setPrecision(user.precision);
@@ -55,28 +64,39 @@ const App = () => {
     setInitializing(false);
   };
 
-  const loadUserId = (stitchUser: StitchUser) => {
-    const userId = new ObjectId(stitchUser.identities[0].id);
+  /**
+   * Loads the user ID.
+   * @param stitchUser the current user.
+   */
+  const loadUserId = (stitchUser: StitchUser): void => {
+    const userId: ObjectId = new ObjectId(stitchUser.identities[0].id);
     setUserId(userId);
   }
 
-  //checks if the user is signed in
+  /*
+   * Set default auth listeners to handle user logic 
+   * after the Stitch app has been initialized.
+   */
   useEffect(() => {
     if (!stitchInitialized) return;
-    const auth = Stitch.defaultAppClient.auth;
+    const auth: StitchAuth = Stitch.defaultAppClient.auth;
+
     //add a auth state listener
     auth.addAuthListener({
       onUserLoggedIn: (auth, loggedInUser) => {
         loadUserId(loggedInUser);
       },
       onUserLoggedOut: (auth, loggedOutUser) => {
-        const userId = new ObjectId(loggedOutUser.identities[0].id);
-        if (!userId) throw new Error('userid not found when logging out');
+        const userId: ObjectId = new ObjectId(loggedOutUser.identities[0].id);
         setLoggedIn(false);
-        setDBLoggedIn({userId: userId, loggedIn: false});
-      }
+        setDBLoggedIn({
+          userId: userId, 
+          loggedIn: false,
+        });
+      },
     });
     setInitializing(false);
+
     //if the user is already logged in
     if (auth.isLoggedIn && auth.user) {
       setInitializing(true);
@@ -84,54 +104,57 @@ const App = () => {
     }
   }, [stitchInitialized]);
 
+  //Initializes the user upon userId refresh.
   useEffect(() => {
     initUser();
   }, [userId]);
 
 
-  //update fcm token to the cloud
-  const updateToken = async () => {
+  /**
+   * Updates the FCM token to database.
+   */
+  const updateToken = async(): Promise<void> => {
+    if (!userId) return;
     try {
-      if (userId) {
-        const fcmToken = await AsyncStorage.getItem('fcmToken');
-        console.log('updated token to mongo');
-        if (!fcmToken) throw new Error('fcmToken missing from async storage');
-        const res = await updateFcmToken({
-          userId: userId,
-          fcmToken: fcmToken
-        });
-        console.log(res);
-      }
+      const fcmToken: string|null = await AsyncStorage.getItem('fcmToken');
+      console.log('updated token to mongo');
+      if (!fcmToken) throw new Error('fcmToken missing from async storage');
+      const res = await updateFcmToken({
+        userId: userId,
+        fcmToken: fcmToken,
+      });
+      console.log(res);
     } catch (err) {
       console.log(err);
     }    
   };
 
-  //get token upon mounting the app, if update the token if it doesn't exist
-  //@return true upon creating new token, false otherwise
-  const getToken = async () => {
+  /**
+   * Gets a new FCM token if none exists.
+   * @returns whether or not a new token has been generated 
+   *          and has been updated to database.
+   */
+  const getToken = async (): Promise<boolean> => {
     const hasPerm: FirebaseMessagingTypes.AuthorizationStatus = await messaging().hasPermission();
-    if (hasPerm) {
-      console.log('get token');
-      // setNotificationSetting();
-      let fcmToken: string|null = await AsyncStorage.getItem('fcmToken');
-      if (!fcmToken) {
-        console.log('got new token');
-        fcmToken = await messaging().getToken();
-        await AsyncStorage.setItem('fcmToken', fcmToken);
-        await updateToken();
-        return true;
-      }
-      return false;
-    } else {
-      throw new Error('no permission');
+    if (!hasPerm) throw new Error('no permission');
+
+    console.log('get token');
+    let fcmToken: string|null = await AsyncStorage.getItem('fcmToken');
+
+    if (!fcmToken) {
+      console.log('got new token');
+      fcmToken = await messaging().getToken();
+      await AsyncStorage.setItem('fcmToken', fcmToken);
+      await updateToken();
+      return true;
     }
+    return false;
   };
 
-
+  //Gets the user set theme.
   useEffect(() => {
     (async() => {
-      const theme = await AsyncStorage.getItem('theme');
+      const theme: string|null = await AsyncStorage.getItem('theme');
       if (!theme) await AsyncStorage.setItem('theme', 'light');
       setDarkMode(theme === 'dark' ? true : false);
     })();
@@ -139,15 +162,18 @@ const App = () => {
   }, []);
 
 
-
-  const displayNotification = async(data: any) => {
-
-    const channelId = await notifee.createChannel({
+  /**
+   * Displays a notification.
+   * @param data the notification data
+   * @todo write an interface for notification data
+   */
+  const displayNotification = async(data: any): Promise<void> => {
+    const channelId: string = await notifee.createChannel({
       id: 'markUpdates',
-      name: 'Mark Updates'
+      name: 'Mark Updates',
     });
     const name: string = data.name;
-    const long = name.length > 30;
+    const long: boolean = name.length > 30;
 
     const notification: Notification = {
       title: data.courseCode,
@@ -168,27 +194,25 @@ const App = () => {
   };
 
 
-  //add token listeners
+  //Set up a onTokenRefresh listener
+  //Set up FCM listeners
   useEffect(() => {
-    
-    //get tokens if logged in
-    if (loggedIn) {
-      getToken();
-      messaging().onTokenRefresh(async (fcmToken: string) => {
-        console.log('got refreshed token');
-        await AsyncStorage.setItem('fcmToken', fcmToken);
-        updateToken();
-      });
-      messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-        console.log('background message: ');
-        console.log(remoteMessage.data);
-        displayNotification(remoteMessage.data);
-      });
-      messaging().onMessage(remoteMessage => {
-        console.log('foreground message: ');
-        console.log(remoteMessage);
-      });
-    }
+    if (!loggedIn) return;
+
+    messaging().onTokenRefresh(async (fcmToken: string) => {
+      console.log('got refreshed token');
+      await AsyncStorage.setItem('fcmToken', fcmToken);
+      updateToken();
+    });
+    messaging().setBackgroundMessageHandler(async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+      console.log('background message: ');
+      console.log(remoteMessage.data);
+      displayNotification(remoteMessage.data);
+    });
+    messaging().onMessage((remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+      console.log('foreground message: ');
+      console.log(remoteMessage);
+    });
   }, [loggedIn]);
 
   if (initializing) {
@@ -205,12 +229,12 @@ const App = () => {
     darkMode: darkMode,
     setDarkMode: setDarkMode,
     precision: precision,
-    setPrecision: setPrecision
+    setPrecision: setPrecision,
   };
 
   const theme: Theme = {
     mode: darkMode ? 'dark' : 'light',
-    colour: darkMode ? darkTheme : lightTheme
+    colour: darkMode ? darkTheme : lightTheme,
   };
 
   return ( //don't question the amount of wraps

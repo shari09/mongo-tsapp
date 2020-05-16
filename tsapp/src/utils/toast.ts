@@ -1,5 +1,5 @@
 import {Toast} from 'native-base';
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
 
 
 export interface Props {
@@ -7,13 +7,13 @@ export interface Props {
   text: string;
 };
 
-export const createToast = (props: Props) => {
+export const createToast = (props: Props): void => {
   Toast.show({
     ...props,
     duration: 1000,
     style: styles.toastView,
     textStyle: styles.toastText,
-    position: 'top'
+    position: 'top',
   });
 };
 
@@ -23,12 +23,12 @@ const styles = StyleSheet.create({
     marginLeft: '10%',
     marginRight: '10%',
     borderRadius: 10,
-    marginBottom: '3%'
+    marginBottom: '3%',
   },
   toastText: {
     textAlign: 'center',
     alignSelf: 'center',
-    flex: 1
+    flex: 1,
   }
 });
 

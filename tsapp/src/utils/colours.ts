@@ -5,7 +5,7 @@ export const colour = {
   MAGENTA: '#9714a8',
   DARK_DARK_BLUE: '#171140',
   LIGHT_LIGHT_GRAY: '#fafafa',
-  BLUE: '#2848bd'
+  BLUE: '#2848bd',
 };
 
 export const adobeAnalogousBlue = {
@@ -13,7 +13,7 @@ export const adobeAnalogousBlue = {
   VIOLET: '#AA5DE8',
   BLUE_VIOLET: '#9B73FF',
   BLUE: '#5E5DE8',
-  LIGHT_BLUE: '#668DFF'
+  LIGHT_BLUE: '#668DFF',
 };
 
 export const adobeAnalogousPastel = {
@@ -21,7 +21,7 @@ export const adobeAnalogousPastel = {
   PINK: '#E85DB8',
   VIOLET: '#9A73FF',
   BLUE: '#58B0EB',
-  GREEN: '#66FFB1'
+  GREEN: '#66FFB1',
 };
 
 export const adobeMonochromaticBlue = {
@@ -29,7 +29,7 @@ export const adobeMonochromaticBlue = {
   LIGHT_BLUE: '#BAB0FF',
   BLUE: '#7963FF',
   GRAY: '#5D5880',
-  GRAY_BLUE: '#6050CC'
+  GRAY_BLUE: '#6050CC',
 };
 
 
