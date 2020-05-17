@@ -114,11 +114,11 @@ const getStyles = (colour: ThemeColour, mode: 'light' | 'dark' = 'dark') => {
       flexDirection: 'row',
     },
     logo: {
-      width: 170,
-      height: 170,
+      width: 150,
+      height: 150,
       alignSelf: 'center',
-      marginTop: '10%',
-      marginBottom: '5%',
+      marginTop: '18%',
+      marginBottom: '10%',
     },
   });
   return styles;

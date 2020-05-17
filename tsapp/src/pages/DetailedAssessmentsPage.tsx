@@ -49,7 +49,9 @@ const DetailedAssessmentsPage: React.FC<Props> = ({navigation, route}) => {
   }
   const courseCode: string = route.params.courseCode;
   const {userId, precision} = useContext<IUserContext>(UserContext);
-  if (!userId) throw new Error('no uid for retrieving assessments');
+  if (!userId) {
+    throw new Error('no uid for retrieving assessments');
+  }
 
   const {colour} = useContext<Theme>(ThemeContext);
   const styles = getStyles(colour);
@@ -182,7 +184,9 @@ const DetailedAssessmentsPage: React.FC<Props> = ({navigation, route}) => {
       const typedStrand: Strand = strand as Strand;
       const curStrandWeight: number | null = weights[typedStrand];
 
-      if (!curStrandWeight) return;
+      if (!curStrandWeight) {
+        return;
+      }
 
       avg[typedStrand] = {
         numerator: totalMarks[typedStrand].total,
@@ -244,7 +248,9 @@ const DetailedAssessmentsPage: React.FC<Props> = ({navigation, route}) => {
    * @returns an array of the Strand components.
    */
   const getStrands = (): JSX.Element[] => {
-    if (!strandsAvg) throw new Error('strandsAvg is not defined');
+    if (!strandsAvg) {
+      throw new Error('strandsAvg is not defined');
+    }
     return Object.keys(strandsAvg).map((strand: string) => {
       const typedStrand: Strand = strand as Strand;
       return (
@@ -263,13 +269,17 @@ const DetailedAssessmentsPage: React.FC<Props> = ({navigation, route}) => {
    *          undefined if there are missing weights.
    */
   const getCourseAvg = (): string | undefined => {
-    if (!strandsAvg || !weights) return;
+    if (!strandsAvg || !weights) {
+      return;
+    }
     let totalMark: number = 0;
     let totalWeight: number = 0;
     Object.keys(strandsAvg).forEach((strand: string) => {
       const typedStrand = strand as Strand;
       const curStrand: Mark | null = strandsAvg[typedStrand];
-      if (!curStrand || !curStrand.denominator) return;
+      if (!curStrand || !curStrand.denominator) {
+        return;
+      }
       totalMark +=
         (curStrand.numerator / curStrand.denominator) * curStrand.weight;
       totalWeight += curStrand.weight;

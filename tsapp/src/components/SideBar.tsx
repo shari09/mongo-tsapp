@@ -82,7 +82,7 @@ const getStyles = (colour: ThemeColour) => {
       width: 100,
       height: 100,
       alignSelf: 'center',
-      marginTop: 40,
+      marginTop: 45,
       marginBottom: 30,
     },
     line: {

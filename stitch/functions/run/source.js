@@ -155,7 +155,7 @@ const getAssessments = (coursePage) => {
         assessment.marks[strand] = null;
       }
     });
-    const feedbackRegex = /<td colspan="4" bgcolor="white">(.*)&nbsp;/gs;
+    const feedbackRegex = /<td colspan="[0-9]" bgcolor="white">(.*)&nbsp;/gs;
     const feedbackMatch = feedbackRegex.exec(assessmentStr);
 
     assessment.feedback = filterSpecialSymbols(
@@ -236,7 +236,7 @@ const updateDB = async (courses, userId) => {
 
         //add the student to the course
         if (courseDoc.students.indexOf(userId) === -1) {
-          const query = { _id: docId };
+          const query = {_id: docId};
           const update = {
             $addToSet: {
               students: userId,
@@ -253,8 +253,8 @@ const updateDB = async (courses, userId) => {
 
       //very sketched i'll rewrite this
       await coursesCollection.findOneAndUpdate(
-        { _id: docId },
-        { $set: { assessmentNames: assessmentNames } },
+        {_id: docId},
+        {$set: {assessmentNames: assessmentNames}},
       );
       const modified = await updateAssessments(course, docId, userId);
 
@@ -305,7 +305,7 @@ const updateCourseAvg = async (course, userId) => {
       userId: userId,
     },
     {
-      $set: { average: avg },
+      $set: {average: avg},
     },
   );
 };
@@ -364,7 +364,7 @@ const updateAssessments = async (course, courseId, userId) => {
       userId: userId,
       courseId: courseId,
     })
-    .sort({ order: 1 })
+    .sort({order: 1})
     .toArray();
 
   //index is used for ordering
@@ -405,9 +405,9 @@ const updateAssessments = async (course, courseId, userId) => {
 
       //random assessment inserted in the middle of the table
       if (order !== assessmentDoc.order) {
-        return assessmentsRef.findOneAndUpdate(
-          { _id: assessmentDoc._id },
-          { order: order },
+        return assessmentCollection.findOneAndUpdate(
+          {_id: assessmentDoc._id},
+          {order: order},
         );
       }
       return Promise.resolve();
@@ -421,12 +421,7 @@ const updateAssessments = async (course, courseId, userId) => {
       console.log(`new mark ${course.courseCode}`);
       modified = true;
       let avg = getAssessmentAvg(assessment.marks);
-      const res = await sendMarkNotif(
-        userId,
-        course.courseCode,
-        assessment,
-        avg,
-      );
+      await sendMarkNotif(userId, course.courseCode, assessment, avg);
       return assessmentCollection.insertOne({
         userId: userId,
         courseId: courseId,
@@ -442,22 +437,17 @@ const updateAssessments = async (course, courseId, userId) => {
 const sendMarkNotif = async (userId, courseCode, assessment, avg) => {
   const db = context.services.get('tsapp-service').db('tsapp');
   return new Promise(async (resolve, reject) => {
-    const user = await db.collection('users').findOne({ _id: userId });
-    let bodyText;
+    const user = await db.collection('users').findOne({_id: userId});
     avg = avg ? (avg * 100).toFixed(user.precision) : null;
-
-    if (avg) {
-      bodyText = `${assessment.name}: ${avg}%`;
-    } else {
-      bodyText = `${assessment.name}: null`;
-    }
 
     const notification = {
       to: user.fcmToken,
       data: {
         courseCode: courseCode,
         average: avg,
-        ...assessment,
+        assessment: {
+          ...assessment,
+        },
       },
       priority: 'high',
     };
@@ -526,7 +516,7 @@ const updateCourseOverviews = async (userId, courseOverviews) => {
         {
           _id: overview._id,
         },
-        { $set: { ...courseOverviews[sameCourseIdx] } },
+        {$set: {...courseOverviews[sameCourseIdx]}},
       );
       courseOverviews.splice(sameCourseIdx, 1);
     }
@@ -553,7 +543,7 @@ const updateCourseOverviews = async (userId, courseOverviews) => {
 
 const run = async (userId) => {
   const db = context.services.get('tsapp-service').db('tsapp');
-  const user = await db.collection('users').findOne({ _id: userId });
+  const user = await db.collection('users').findOne({_id: userId});
   const [courseOverviews, courses] = await getFromTa(
     user.username,
     user.password,

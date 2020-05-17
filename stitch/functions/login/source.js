@@ -20,7 +20,7 @@ const login = async (loginPayload) => {
     .get('tsapp-service')
     .db('tsapp')
     .collection('users');
-  const { username, password } = loginPayload;
+  const {username, password} = loginPayload;
   const user = await userCollection.findOne({
     username: username,
   });

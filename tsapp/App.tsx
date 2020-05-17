@@ -9,7 +9,9 @@ import {ObjectId} from 'bson';
 import {Stitch, StitchAuth, StitchUser} from 'mongodb-stitch-react-native-sdk';
 import {Root} from 'native-base';
 import React, {useEffect, useState} from 'react';
+import ReactDOMServer from 'react-dom/server';
 import SplashScreen from './src/components/SplashScreen';
+import StrandComponent from './src/components/StrandComponent';
 import LoggedInPage from './src/pages/LoggedInPage';
 import LoginPage from './src/pages/LoginPage';
 import {
@@ -170,7 +172,8 @@ const App: React.FC = () => {
       id: 'markUpdates',
       name: 'Mark Updates',
     });
-    const name: string = data.name;
+    const assessment = JSON.parse(data.assessment);
+    const name: string = assessment.name;
     const long: boolean = name.length > 30;
 
     const notification: Notification = {
@@ -188,6 +191,7 @@ const App: React.FC = () => {
               text: `${name}: ${data.average}%`,
             }
           : undefined,
+        color: '#A564FF',
       },
     };
     notifee.displayNotification(notification);
