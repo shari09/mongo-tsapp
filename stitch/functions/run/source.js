@@ -1,3 +1,13 @@
+/*
+Copyright (c) 2020 Shari
+Copyright (c) 2020 beepboop271
+
+This software is licensed under MIT License.
+
+This software was based on https://github.com/beepboop271/average-calculator-v2,
+licensed under https://github.com/shari09/mongo-tsapp/blob/master/LICENSE
+*/
+
 const getDate = () => {
   const now = new Date();
   if (now.getMonth() >= 1 && now.getMonth() < 8) {
